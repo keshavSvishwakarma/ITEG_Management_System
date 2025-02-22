@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 // Create Super Admin
 exports.createStudent_Admission_process = async (req, res) => {
   try {
-    const { Full_name, fater_name,Mother_name,stream,persent12th,email, adharCard,student_Mb_no, father_Mb_no,course,track, adress} = req.body;
+    const { Full_name, fater_name,Mother_name,stream,persent12th,email, adharCard,student_Mb_no, father_Mb_no,course,track, adress,status} = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const Student_Admission_process  = new Student_Admission_Process({
@@ -20,7 +20,7 @@ exports.createStudent_Admission_process = async (req, res) => {
         course,
         track, 
         adress,
-        stape
+        status
 
     });
 
