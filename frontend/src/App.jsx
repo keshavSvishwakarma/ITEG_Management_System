@@ -34,7 +34,10 @@
 
 import { BrowserRouter as Router } from "react-router-dom";
 import Sidebar from "./components/common-components/sidebar/Sidebar";
+// import SignupPage from "./components/common-components/signup/SignupPage";
+
 import Dashboard from "./components/dashboard/Dashboard";
+
 // import  { useSelector, useDispatch } from "react-redux";
 // import { increment, decrement, incrementByAmount } from "./features/counterSlice";
 
@@ -44,7 +47,7 @@ function App() {
       <Router>
         <div className="flex bg-gray-100">
           <Sidebar role="admin" />
-
+          {/* <SignupPage /> */}
           <Dashboard />
         </div>
       </Router>
