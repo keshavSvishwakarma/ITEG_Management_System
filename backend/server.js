@@ -4,13 +4,15 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const setupSwagger = require('./swagger/swagger');
 
-const protectedRoutes = require("./routes/protectedRoutes.js");
-const studentRoutes = require("./routes/studentRoutes.js");
-const student_admissionProcessRoutes = require("./routes/studentAdmissionProcessRoutes.js");
-const AdminRoutes = require("./routes/adminRoutes.js");
-const superAdminRoutes = require("./routes/superAdminRoutes.js");
-const facultyRoutes= require("./routes/facultyRoutes.js");
-
+const protectedRoutes = require("./routes/protectedRoutes");
+const studentRoutes = require("./routes/studentRoutes");
+const student_admissionProcessRoutes = require("./routes/student_admissionProcessRoutes");
+const AdminRoutes = require("./routes/AdminRoutes");
+const superAdminRoutes = require("./routes/SuperAdminRoutes");
+const facultyRoutes= require("./routes/facultyRoutes");
+// const swaggerUi = require('swagger-ui-express');
+// const YAML = require('yamljs');
+// const path = require('path');
 
 
 const app = express();
@@ -26,6 +28,7 @@ app.use("/api/superAdmin", superAdminRoutes);
 app.use("/api/faculty", facultyRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/students", studentRoutes);
+app.use("/api/studentAdmissionProcess", student_admissionProcessRoutes);
 
 
 
