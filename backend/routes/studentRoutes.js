@@ -7,8 +7,8 @@ const studentController= require("../modules/student/controllers/AdmittedStudent
 const allowedRoles = ["Super Admin", "Faculty", "Admin"];
 // Register Student
 //Swagger
-router.post("/admitted", verifyToken, checkRole(allowedRoles), studentController.createStudent);
-
+// router.post("/admitted", verifyToken, checkRole(allowedRoles), studentController.createStudent);
+router.post("/admitted", studentController.createAdmittedStudent);
 
 // Get All Permission Students
 router.get("/permission-students", verifyToken, checkRole(['Super Admin', 'Admin', 'Faculty']), studentController.getAllPermissionStudents);

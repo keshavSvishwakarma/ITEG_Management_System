@@ -1,14 +1,50 @@
 const Student = require("../models/AdmittedStudents");
+const AdmittedStudent= require("../models/AdmittedStudents");
+const AdmissionProcess = require("../models/StudentAdmissionProcess");
+// // Create a new student
+// exports.createStudent = async (req, res) => {
+//     try {
+//         const student = new Student(req.body);
+//         await student.save();
+//         res.status(201).json(student);
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// };
 
-// Create a new student
-exports.createStudent = async (req, res) => {
-    try {
-        const student = new Student(req.body);
-        await student.save();
-        res.status(201).json(student);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+
+// const AdmissionProcess = require("../models/admissionProcessStudent");
+// const AdmittedStudent = require("../models/admittedStudent");
+
+// ✅ Create New Admitted Student (from AdmissionProcess)
+exports.createAdmittedStudent = async (req, res) => {
+  try {
+    const { admissionId, email } = req.body;
+
+    const admissionData = await AdmissionProcess.findById(admissionId);
+    console.log("Admission Data Found:", admissionData);
+
+    if (!admissionData || !admissionData.admissionFlag) {
+      return res.status(400).json({ message: "Student not cleared or not found." });
     }
+
+    const newAdmitted = new AdmittedStudent({
+      admissionRef: admissionData._id,
+      fullName: `${admissionData.firstName} ${admissionData.lastName}`,
+      stream: admissionData.stream,
+      course: admissionData.course,
+      fatherName: admissionData.fatherName,
+      mobileNo: admissionData.studentMobile,
+      email: email || "", // Optional
+    });
+
+    await newAdmitted.save();
+    return res.status(201).json({ message: "Student admitted", data: newAdmitted });
+
+  } catch (error) {
+    console.error("Error during admission:", error); // Important for debugging
+    return res.status(500).json({ message: "Admission failed", error: error.message });
+  }
 };
 
 // Get all students
@@ -106,65 +142,8 @@ exports.deleteStudent = async (req, res) => {
 
 // // // Migrate Student Data from SQL to MongoDB
 // // exports.migrateStudents = async (req, res) => {
-// //     try {
-// //         // Fetch Data from MySQL
-// //         const [students] = await sqlPool.query("SELECT studentId, name, course, email FROM students");
+// //  
 
-// //         if (students.length === 0) {
-// //             return res.status(404).json({ message: "No student data found in SQL database" });
-// //         }
-
-// //         // Insert Data into MongoDB
-// //         await Student.insertMany(students);
-
-// //         res.status(200).json({ message: "Student data migrated successfully!", migratedCount: students.length });
-// //     } catch (error) {
-// //         console.error("Error in migrating student data:", error);
-// //         res.status(500).json({ message: "Server Error", error: error.message });
-// //     }
-// // };
-
-
-
-// // // Migrate Students (Without SQL)
-// // exports.migrateStudents = async (req, res) => {
-// //     try {
-// //         const students = mockStudents; // SQL ke bina dummy data use karenge
-
-// //         // MongoDB me data insert karo
-// //         const savedStudents = await Student.insertMany(students);
-
-// //         res.status(201).json({ message: "Student data migrated successfully!", data: savedStudents });
-// //     } catch (error) {
-// //         res.status(500).json({ message: "Server Error", error: error.message });
-// //     }
-// // };
-// async (req, res) => {
-//     try {
-//         const { name, email, course, age } = req.body;
-//         if (!name || !email || !course || !age) {
-//             return res.status(400).json({ message: "All fields are required" });
-//         }
-        
-//         const newStudent = new Student({ name, email, course, age });
-//         await newStudent.save();
-//         res.status(201).json({ message: "Student registered successfully", student: newStudent });
-
-//     } catch (error) {
-//         res.status(500).json({ message: "Server Error", error });
-//     }
-// }
-
-
-// // // Faculty, Admin, & Super Admin Can Migrate Data
-// // exports.migrateStudents = async (req, res) => {
-// //     try {
-// //         // Migration logic yahan likho
-// //         res.status(200).json({ message: "Student data migrated successfully" });
-// //     } catch (error) {
-// //         res.status(500).json({ message: "Server Error", error });
-// //     }
-// // };
 
 
 // company interviewRecord
