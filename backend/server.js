@@ -1,9 +1,13 @@
-require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const setupSwagger = require('./swagger/swagger');
+require("dotenv").config();
 
+// Import Routes
+const adminRoutes = require("./routes/AdminRoutes");
+const facultyRoutes = require("./routes/facultyRoutes");
+// const studentAdmissionRoutes = require("./routes/student_admissionProcessRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const student_admissionProcessRoutes = require("./routes/student_admissionProcessRoutes");
@@ -15,11 +19,21 @@ const facultyRoutes= require("./routes/facultyRoutes");
 // const path = require('path');
 
 
+// const superAdminRoutes = require("./routes/SuperAdminRoutes");
+//expres object
 const app = express();
+// cors for frontend and backend communication
+app.use(
+  cors({
+    origin: "http://localhost:5173", // or '*' to allow all
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true, // only if you're using cookies or sessions
+  })
+);
 
-setupSwagger(app); 
+app.options("*", cors());
+
 // Middleware
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -41,15 +55,6 @@ mongoose
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.error("❌ DB Connection Error:", err));
 
-app.get("/", (req, res) => {
-  res.send("JWT Authentication API Running...");
-});
-
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-
-
-
-

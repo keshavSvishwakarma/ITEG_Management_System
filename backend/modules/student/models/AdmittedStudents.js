@@ -45,6 +45,7 @@ const AdmittedStudentSchema = new mongoose.Schema({
   placedInfo: placedInfoSchema,
 
   permissionRequired: { type: Boolean, default: false },
+  permission: permissionSchema,
   interviewRecord: [interviewRecordSchema],
   readinessStatus: { type: String, enum: ['Ready', 'Not Ready'], default: 'Not Ready' }
 
