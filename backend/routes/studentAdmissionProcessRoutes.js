@@ -4,18 +4,17 @@ const { addAdmission,
     updateStudent,
     deleteStudent,
     getStudentsByTrack,
-    downloadStudentExcel,
-    addAdmission
+    downloadStudentExcel
 } = require('../modules/student/controllers/admissionProcessStudentControllers');
 const StudentAdmissionProcess = require('../modules/student/models/admissionProcessStudent');
 const router = express.Router();
 
 
 // router.post('/admission-process', createStudent_Admission_process);
-router.get('/admission-dashboard',getAdmissionDashboard);
-router.put('/update/:id', updateStudent);
-router.delete('/delete/:id', deleteStudent);
-router.get('/track/:track', getStudentsByTrack);
+// router.get('/admission-dashboard',getAdmissionDashboard);
+// router.put('/update/:id', updateStudent);
+// router.delete('/delete/:id', deleteStudent);
+// router.get('/track/:track', getStudentsByTrack);
 router.post('/admission-process', addAdmission);
 // router.get('/admission-dashboard',getAllAdmissions);
 // router.put('/update/:id', updateStudent);
