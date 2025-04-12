@@ -1,6 +1,6 @@
 const express = require('express');
-const { createStudent_Admission_process,
-    getAdmissionDashboard,
+const { addAdmission,
+    getAllAdmissions,
     updateStudent,
     deleteStudent,
     getStudentsByTrack,
@@ -22,10 +22,10 @@ router.post('/admission-process', addAdmission);
 // router.delete('/delete/:id', deleteStudent);
 // router.get('/track/:track', getStudentsByTrack);
 
-const allowedRoles = ["Super Admin", "Faculty", "Admin"];
+// const allowedRoles = ["Super Admin", "Faculty", "Admin"];
 
 // Download Student Data as Excel
-router.get("/download/excel",downloadStudentExcel);
+// router.get("/download/excel",downloadStudentExcel);
 
 
 
