@@ -1,10 +1,15 @@
 const express = require('express');
-// const { createSuperAdmin } = require('../modules/SuperAdmin/controllers/superAdminController');
+const { 
+  registerSuperAdmin, 
+  loginSuperAdmin, 
+  getAllSuperAdmins, 
+  getSuperAdminById 
+} = require('../modules/SuperAdmin/controllers/SuperAdminController');
 
 const { verifyToken, checkRole } = require("../middlewares/authMiddleware");
 
 
-const SuperAdminController= require("../modules/SuperAdmin/controllers/SuperAdminController");
+const SuperAdminController= require("../modules/SuperAdmin/controllers/superAdminController");
 
 
 const router = express.Router();
@@ -20,4 +25,3 @@ router.get("/superadmin", verifyToken, checkRole(["super admin"]),SuperAdminCont
 
 router.get("/:id", verifyToken, checkRole(["Super Admin"]), SuperAdminController.getSuperAdminById);
 module.exports = router;
-
