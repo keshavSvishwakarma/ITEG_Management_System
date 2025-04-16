@@ -1,22 +1,7 @@
 const Student = require("../models/AdmittedStudents");
 const AdmittedStudent= require("../models/AdmittedStudents");
 const AdmissionProcess = require("../models/StudentAdmissionProcess");
-// // Create a new student
-// exports.createStudent = async (req, res) => {
-//     try {
-//         const student = new Student(req.body);
-//         await student.save();
-//         res.status(201).json(student);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// };
 
-
-// const AdmissionProcess = require("../models/admissionProcessStudent");
-// const AdmittedStudent = require("../models/admittedStudent");
-
-// ✅ Create New Admitted Student (from AdmissionProcess)
 exports.createAdmittedStudent = async (req, res) => {
   try {
     const { admissionId, email } = req.body;
@@ -69,23 +54,6 @@ exports.getStudentById = async (req, res) => {
 };
 
 
-// Update student by ID
-// exports.updateStudent = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const updatedStudent = await Student.findByIdAndUpdate(id, req.body, { new: true });
-
-//         if (!updatedStudent) {
-//             return res.status(404).json({ message: "Student not found" });
-//         }
-
-//         res.status(200).json(updatedStudent);
-//     } catch (error) {
-//         console.error("Update Error:", error);
-//         res.status(500).json({ message: "Server error while updating student" });
-//     }
-// };
-
 exports.updateStudent = async (req, res) => {
     try {
         const { id } = req.params;
@@ -128,21 +96,6 @@ exports.deleteStudent = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-
-// // Migrate Students
-// exports.migrateStudents = async (req, res) => {
-//     try {
-//         // Migration logic here
-//         res.status(200).json({ message: "Students migrated successfully" });
-//     } catch (error) {
-//         res.status(500).json({ message: "Server Error", error });
-//     }
-// };
-
-// // // Migrate Student Data from SQL to MongoDB
-// // exports.migrateStudents = async (req, res) => {
-// //  
 
 
 
@@ -353,34 +306,6 @@ exports.getAllPermissionStudents = async (req, res) => {
 
 
 
-  // update Permission Student API
-// exports.updatePermissionStudent = async (req, res) => {
-//     try {
-//       const { studentId, reason, approvedBy } = req.body;
-  
-//       // Validate required fields
-//       if (!studentId || !reason || !approvedBy) {
-//         return res.status(400).json({ message: "All fields are required" });
-//       }
-  
-//       // Find student by ID
-//       const student = await Student.findById(studentId);
-//       if (!student) {
-//         return res.status(404).json({ message: "Student not found" });
-//       }
-  
-//       // Update permission
-//       student.permission = { reason, approvedBy };
-//       await student.save();
-  
-//       res.status(200).json({ message: "Permission granted successfully", student });
-//     } catch (error) {
-//       console.error("Create Permission Error:", error);
-//       res.status(500).json({ message: "Server Error", error });
-//     }
-//   };
-
-
 
 
 
@@ -416,24 +341,6 @@ exports.updatePermissionStudent = async (req, res) => {
     }
   };
 
-
-// // Fetch Levels - No Authentication Required
-// exports.getLevels = async (req, res) => {
-//     try {
-//         const { studentId, levelName, className } = req.query;
-//         let query = {};
-
-//         if (studentId) query.studentId = studentId;
-//         if (levelName) query.levelName = levelName;
-//         if (className) query.className = className;
-
-//         const levels = await Level.find(query).populate("studentId", "name email");
-//         res.status(200).json({ success: true, levels });
-//     } catch (error) {
-//         console.error("Error fetching levels:", error);
-//         res.status(500).json({ message: "Server Error", error });
-//     }
-// };
 
 exports.createLevel = async (req, res) => {
     try {
