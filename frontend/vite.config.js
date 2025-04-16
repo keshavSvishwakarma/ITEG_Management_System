@@ -25,9 +25,7 @@ import react from '@vitejs/plugin-react-swc';
 // ✅ Import vitest config
 export default defineConfig({
   plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: './src/setupTests.js' // create this file next
-  }
-});
+  // server: {
+  //   port: 5000, 
+  // },
+})
