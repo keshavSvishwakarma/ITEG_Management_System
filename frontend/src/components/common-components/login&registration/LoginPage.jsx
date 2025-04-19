@@ -9,8 +9,8 @@ import googleLogo from "../../../assets/images/Google.png";
 import linkedinLogo from "../../../assets/images/linkedin.png";
 import facebookLogo from "../../../assets/images/FB.png";
 
-import EmailField from "../../common-feild/EmailField";
-import PasswordField from "../../common-feild/PasswordField";
+import EmailField from "../common-feild/EmailField";
+import PasswordField from "../common-feild/PasswordField";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -39,6 +39,8 @@ const LoginPage = () => {
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
+      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+
       <ReusableForm
         initialValues={initialValues}
         onSubmit={handleLoginSubmit}
@@ -47,7 +49,7 @@ const LoginPage = () => {
         {(values, handleChange) => (
           <>
             <div className="flex flex-col items-center">
-              <img src={logo} alt="SSISM Logo" className="h-20" />
+              <img src={logo} alt="SSISM Logo" className="h-10" />
               <h2 className="text-2xl font-bold mt-2">Login</h2>
             </div>
 
@@ -104,6 +106,7 @@ const LoginPage = () => {
           </>
         )}
       </ReusableForm>
+    </div>
     </div>
   );
 };
