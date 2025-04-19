@@ -1,5 +1,4 @@
-
-import  { useState } from "react";
+import { useState } from "react";
 import ReusableForm from "../../../ReusableForm";
 import { loginValidationSchema } from "../../../validationSchema";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,8 +11,6 @@ import facebookLogo from "../../../assets/images/FB.png";
 
 import EmailField from "../../common-feild/EmailField";
 import PasswordField from "../../common-feild/PasswordField";
-
-
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -95,7 +92,8 @@ const LoginPage = () => {
                 <img src={facebookLogo} alt="Facebook" className="h-10" />
               </button>
             </div>
-            <p className="text-center mt-4 text-gray-600">Don't have an account?{" "}
+            <p className="text-center mt-4 text-gray-600">
+              Don&apos;t have an account?{" "}
               <Link
                 to="/registration"
                 className="text-orange-500 hover:text-orange-800 transition"
@@ -111,8 +109,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
-
-
-
-

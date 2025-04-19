@@ -1,12 +1,11 @@
 import { Formik, Form } from "formik";
 
-import {
-  TextInput,
-  SelectInput,
-  RadioInput,
-} from "./../../common-feild/FormFields";
+import TextInput from "../common-feild/TextInput";
+// import RadioGroup from "../common-feild/RadioGroup";
+import SelectInput from "../common-feild/SelectInput";
 
 import { signupValidationSchema } from "../../../validationSchema";
+import RadioGroup from "../common-feild/RadioGroup";
 
 const SignupPage = () => {
   const initialValues = {
@@ -25,15 +24,8 @@ const SignupPage = () => {
     courseOrDiploma: "",
   };
 
-  const handleSubmit = async (values, { resetForm }) => {
-    try {
-      const response = await axios.post("YOUR_API_ENDPOINT", values);
-      alert("Form submitted successfully!");
-      resetForm();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Failed to submit the form");
-    }
+  const handleSubmit = () => {
+    console.log("successful");
   };
 
   return (
@@ -111,7 +103,7 @@ const SignupPage = () => {
               name="twelfthPassoutYear"
               type="date"
             />
-            <RadioInput
+            <RadioGroup
               label="What do you want to do here"
               name="courseOrDiploma"
               options={[

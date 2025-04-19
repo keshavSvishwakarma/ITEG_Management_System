@@ -1,4 +1,3 @@
-import React from "react";
 import { Field, ErrorMessage } from "formik";
 
 const RadioGroup = ({ label, name, options }) => (
