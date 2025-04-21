@@ -1,64 +1,53 @@
-<<<<<<< HEAD
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-
-const superAdminRoutes = require('./routes/superAdminRoutes');
-
-const app = express();
-
-app.use(cors());
-app.use(bodyParser.json());
-
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error(err));
-
-app.use('/api/superadmin', superAdminRoutes);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-=======
-require("dotenv").config();
 const express = require("express");
-const authRoutes = require("./routes/auth");
-const mongoose = require("mongoose");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const userRoutes = require("./routes/userRoutes");
+const setupSwagger = require('./swagger/swagger');
+// Import Routes
+const webhookRoutes = require("./routes/webhookRoutes");
+
+const studentAdmissionRoutes = require("./routes/studentAdmissionProcessRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 
+const admittedStudentRoutes = require("./routes/studentRoutes");
+const userRoutes=require("./routes/userRoutes.js");
+//expres object
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+// cors for frontend and backend communication
+setupSwagger(app);
+app.use(
+  cors({
+    origin: "http://localhost:5173", // or '*' to allow all
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true, // only if you're using cookies or sessions
+  })
+);
+
+app.options("*", cors());
 app.use(express.json());
 
-app.use("/api/auth", authRoutes);
+
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Routes
+
 app.use("/api/protected", protectedRoutes);
+app.use("/api/students/admission", studentAdmissionRoutes);
+app.use("/api/students", admittedStudentRoutes);
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .catch((err) => console.log("MongoDB Connection Error:", err));
-  const PORT = process.env.PORT || 5000;
+
+app.use("/api/webhook", webhookRoutes);
+
+app.use("/api/user", userRoutes);
+
+// MongoDB Connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ DB Connection Error:", err));
+
+// Start Server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-app.get("/", (req, res) => {
-  res.send("JWT Authentication API Running...");
-});
-
-
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB Connected Successfully"))
-    .catch(err => console.error("MongoDB Connection Error:", err));
-
-
-app.use(express.json()); // JSON Parsing
-app.use("/api/users", userRoutes); // Use Routes
-
-
->>>>>>> 5e32d87dd5a15d759e2a1b4ad351244cccfb0b70

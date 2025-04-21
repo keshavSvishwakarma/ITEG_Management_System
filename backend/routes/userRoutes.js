@@ -1,11 +1,10 @@
 const express = require("express");
-const { verifyToken, checkRole } = require("../middlewares/authMiddleware"); // ✅ Ensure proper import
-
+const usercontroller = require("../modules/user/controllers/userController");
 const router = express.Router();
 
-router.get("/profile", verifyToken, checkRole(["User"]), (req, res) => {
-    res.status(200).json({ message: "Welcome User!", user: req.user });
-});
+// POST /api/users/create
+router.post("/create",usercontroller. createUser);
 
+router.post("/login",usercontroller.login);
 
 module.exports = router;

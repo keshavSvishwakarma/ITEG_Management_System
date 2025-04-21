@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import back from "../../../assets/icons/back-icon.png";
 
@@ -41,7 +41,7 @@ const StudentEditPage = () => {
   });
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
-  const [imageSrc, setImageSrc] = useState(
+  const [imageSrc] = useState(
     "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg"
   );
 
@@ -107,7 +107,7 @@ const StudentEditPage = () => {
   };
 
   return (
-    <div className="w-[85vw] px-8 py-5 bg-gray-100 min-h-screen">
+    <div className="w-[80vw] px-8 py-5 bg-gray-100 min-h-screen">
       <div className="flex items-center gap-7">
         <img
           className="h-5 cursor-pointer"

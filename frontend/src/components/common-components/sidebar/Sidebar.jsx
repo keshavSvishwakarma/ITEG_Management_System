@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
@@ -12,7 +13,7 @@ const menuItems = [
   {
     name: "Add Process",
     icon: admissionIcon,
-    roles: ["admin"],
+    roles: ["superadmin"],
     subMenu: [
       { name: "Dashboard", path: "/" },
       { name: "Admission Process", path: "/admission" },
@@ -21,7 +22,7 @@ const menuItems = [
   {
     name: "Student Record",
     icon: studentRecordIcon,
-    roles: ["admin", "teacher"],
+    roles: ["superadmin", "admin", "faculty"],
     subMenu: [
       { name: "Student Profiles", path: "/student-dashboard" },
       { name: "Permission Students", path: "/permission-students" },
@@ -33,7 +34,7 @@ const menuItems = [
   {
     name: "Placement Info",
     icon: placementIcon,
-    roles: ["admin", "teacher", "student"],
+    roles: ["superadmin", "admin", "faculty"],
     subMenu: [
       { name: "Readiness Status", path: "/readiness-status" },
       { name: "Interview Record", path: "/placement-interview-record" },
@@ -64,10 +65,13 @@ const Sidebar = ({ role }) => {
             isOpen ? "translate-x-0" : "-translate-x-full"
           } md:translate-x-0 z-50 flex flex-col`}
         >
-          <div className="flex items-center mb-4">
-            <img src={logo} alt="Logo" />
+          {/* Logo */}
+          <div className="flex items-center mb-4 ">
+            <img className="h-[11vh]" src={logo} alt="Logo" />
           </div>
-          <ul className="flex-1">
+
+          {/* Menu Items */}
+          <ul className="flex-1 overflow-y-auto">
             {menuItems
               .filter((item) => item.roles.includes(role))
               .map((item, index) => {
@@ -96,7 +100,7 @@ const Sidebar = ({ role }) => {
                       <ul className="ml-4 mt-2">
                         {item.subMenu.map((subItem, subIndex) => {
                           const isActiveLink =
-                            location.pathname === subItem.path; // Check active state
+                            location.pathname === subItem.path;
 
                           return (
                             <li key={subIndex} className="p-2">
@@ -120,6 +124,8 @@ const Sidebar = ({ role }) => {
               })}
           </ul>
         </div>
+
+        {/* Mobile Toggle Button */}
         <button
           className={`md:hidden fixed top-4 left-4 p-2 bg-gray-200 rounded z-50 transition-transform transform ${
             isOpen ? "translate-x-64" : "translate-x-0"
@@ -129,6 +135,7 @@ const Sidebar = ({ role }) => {
           <Menu />
         </button>
       </div>
+
       <div className="flex-1 md:ml-64 overflow-y-auto h-screen">
         {/* Main Content */}
       </div>
