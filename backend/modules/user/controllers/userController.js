@@ -13,7 +13,7 @@ const generateToken = (user) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, adharCard, department, positionRole, role } = req.body;
+    const { name, email, password, adharCard, department, position, role } = req.body;
 
     // Allowed roles
     const allowedRoles = ["admin", "superadmin", "faculty"];
@@ -38,7 +38,7 @@ exports.createUser = async (req, res) => {
       password: hashedPassword,
       adharCard,
       department,
-      positionRole,
+      position,
       role
     });
 
@@ -91,7 +91,7 @@ exports.login = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          positionRole: user.positionRole,
+          position: user.position,
           department: user.department,
         }
       });
