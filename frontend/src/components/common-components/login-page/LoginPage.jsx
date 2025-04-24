@@ -78,9 +78,17 @@ const LoginPage = () => {
                 {loginError && (
                   <p className="text-red-600 text-sm mb-2">{loginError}</p>
                 )}
-                <p className="text-right text-sm text-gray-500 cursor-pointer hover:underline">
+                {/* <p className="text-right text-sm text-gray-500 cursor-pointer hover:underline">
                   Forgot Your Password?
-                </p>
+                </p> */}
+                <div className="text-right">
+                  <Link
+                    to="/forget-password"
+                    className=" text-sm  text-gray-500 cursor-pointer hover:underline"
+                  >
+                    Forgot Your Password
+                  </Link>
+                </div>
               </div>
 
               <button
