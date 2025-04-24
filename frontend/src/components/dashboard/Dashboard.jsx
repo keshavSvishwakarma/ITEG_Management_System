@@ -8,6 +8,7 @@ import StudentEditPage from "../student-records/student-edit-page/StudentEditPag
 import StudentDashboard from "../student-records/student-dashboard/StudentDashboard";
 import StudentDetailTable from "../student-records/student-detail-table/StudentDetailTable";
 import StudentPermission from "../student-records/student-permission/StudentPermission";
+import UserEditModal from "../common-components/user-edit-modal/UserEditModal";
 // import LoginPage from "../common-components/login&registration/LoginPage";
 // import SignupPage from "./../common-components/signup/SignupPage";
 
@@ -18,6 +19,7 @@ const Dashboard = () => {
         <Route path="/" element={<AdmissionDashboard />} />
         <Route path="/admission" element={<AdmissionProcess />} />
         <Route path="/admition-record" element={<AdmitionRecords />} />
+        <Route path="/user-edit-modal" element={<UserEditModal />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/student-permission" element={<StudentPermission />} />
         <Route path="/student-detail-table" element={<StudentDetailTable />} />

@@ -15,7 +15,7 @@ const UserProfile = (props) => {
   };
 
   const onSettings = () => {
-    console.log("Opening settings...");
+    navigate("/user-edit-modal")
   };
 
   useEffect(() => {

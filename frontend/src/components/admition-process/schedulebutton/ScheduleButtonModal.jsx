@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FaCalendarAlt, FaClock } from "react-icons/fa";
 
-const InterviewProcess = () => {
+const ScheduleButtonModal = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
@@ -172,4 +172,4 @@ const InterviewProcess = () => {
   );
 };
 
-export default InterviewProcess;
+export default ScheduleButtonModal;
