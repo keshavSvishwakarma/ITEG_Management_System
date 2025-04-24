@@ -1,4 +1,3 @@
-
 import logo from "../../../assets/images/logo-ssism.png";
 import ReusableForm from "../../../ReusableForm";
 import EmailField from "../common-feild/EmailField";
@@ -22,7 +21,6 @@ const ForgetPassword = () => {
         {/* ✅ ReusableForm properly used */}
         <ReusableForm
           initialValues={initialValues}
-        
           validationSchema={loginValidationSchema}
         >
           {(values, handleChange) => (
