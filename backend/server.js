@@ -13,7 +13,7 @@ const protectedRoutes = require("./routes/protectedRoutes");
 const admittedStudentRoutes = require("./routes/studentRoutes");
 const userRoutes=require("./routes/userRoutes.js");
 
-
+const otpRoute=require('./routes/otpRoutes')
 
 
 
@@ -53,7 +53,7 @@ app.use("/", webhookRoutes);
 
 app.use("/api/user", userRoutes);
 // in your main server.js / app.js
-app.use('/api/otp', require('./routes/otpRoutes'));
+app.use('/api/otp',otpRoute );
 
 
 
