@@ -308,27 +308,21 @@ paths:
           description: Invalid email or password
         '500':
           description: Server error
+ 
 
-
-  /api/webhook/receive/data:
+  /students/admitted:
+   paths:
+  /studentAdmissionProcess/admission-process:
     post:
-      summary: Receive and save student admission data
-      description: Receives student admission data from a central system, verifies HMAC signature, and stores it in the database.
+      summary: Add a new student admission
       tags:
-        - Admission
+        - Admissions
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StudentAdmission'
-      parameters:
-        - in: header
-          name: x-webhook-signature
-          schema:
-            type: string
-          required: true
-          description: HMAC SHA256 signature for verifying webhook authenticity
+              $ref: '#/components/schemas/StudentAdmissionProcess'
       responses:
         '201':
           description: Student admission initiated
@@ -392,26 +386,7 @@ paths:
         '500':
           description: Server error
 
-  /admissions/{studentId}/iteg-flag:
-    post:
-      summary: Update ITEG interview flag and notify central system
-      tags:
-        - Admissions
-      parameters:
-        - in: path
-          name: studentId
-          required: true
-          schema:
-            type: string
-          description: ID of the student
-      responses:
-        '200':
-          description: Interview flag updated and sent to central
-        '404':
-          description: Student not found
-        '500':
-          description: Server error
-
+  
   /admissions/{id}/interviews:
     post:
       summary: Add a new interview round for a student
