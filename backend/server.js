@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const setupSwagger = require('./swagger/swagger');
+const setupSwagger = require("./swagger/swagger");
 // Import Routes
 const webhookRoutes = require("./routes/webhookRoutes");
 
@@ -11,12 +11,16 @@ const studentAdmissionRoutes = require("./routes/studentAdmissionProcessRoutes")
 const protectedRoutes = require("./routes/protectedRoutes");
 
 const admittedStudentRoutes = require("./routes/studentRoutes");
+<<<<<<< HEAD
 const userRoutes=require("./routes/userRoutes.js");
 
 const otpRoute=require('./routes/otpRoutes')
 
 
 
+=======
+const userRoutes = require("./routes/userRoutes.js");
+>>>>>>> fe2a55726d47780a320acd878079ee56f42cb147
 //expres object
 const app = express();
 // cors for frontend and backend communication
@@ -31,7 +35,6 @@ app.use(
 
 app.options("*", cors());
 app.use(express.json());
-
 
 // Middleware
 app.use(bodyParser.json());
@@ -59,11 +62,16 @@ app.use('/api/otp',otpRoute );
 
 
 // MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ DB Connection Error:", err));
+module.exports = app;
+// Start Server only if this is the main module (not when testing)
+if (require.main === module) {
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ Connected to MongoDB"))
+    .catch((err) => console.error("❌ DB Connection Error:", err));
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  // 👈 Export the app for testing
+
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
