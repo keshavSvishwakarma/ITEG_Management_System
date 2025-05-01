@@ -130,7 +130,7 @@ describe("Admission API Tests", () => {
   });
 });
 
-//for updateAdmissionFlag Api
+//for update interview flag Api
 describe("Admission API Tests - Interview Flag", () => {
   
  let student;
