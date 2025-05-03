@@ -509,6 +509,9 @@ paths:
                 department:
                   type: string
                   example: Computer Science
+                mobileNo:
+                  type: string
+                  example: "9876543210"
                 isActive:
                   type: boolean
                   example: true
