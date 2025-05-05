@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const Otp = require("../models/otpModel");
 const { sendResetLinkEmail } = require("../helpers/sendOtp");
 const generateOtp = require("../helpers/generateOtp");
+const cloudinary = require('cloudinary').v2;
 
 require("dotenv").config();
 
@@ -24,11 +25,16 @@ const generateRefreshToken = (user) => {
   );
 };
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: 787195123151781,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 
 exports.createUser = async (req, res) => {
   try {
-    let { name, email, mobileNo, password, adharCard, department, position, role, isActive, updatedAt, createdAt } = req.body;
+    let { profileImage, name, email, mobileNo, password, adharCard, department, position, role, isActive, updatedAt, createdAt } = req.body;
 
     if (!name || !email || !mobileNo || !password || !adharCard || !department || !position || !role) {
       return res.status(400).json({ message: "All fields are required" });
@@ -67,8 +73,17 @@ exports.createUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Upload Profile Image to Cloudinary
+    // let base64Image = imageBase64.startsWith("data:image")
+    //   ? imageBase64
+    //   : `data:image/png;base64,${imageBase64}`;
+
+    // const result = await cloudinary.uploader.upload(base64Image, { folder: "uploads" });
+    // console.log(userRecord.uid,"userRecord.uid")
+
     // Create new user
     const newUser = new User({
+      profileImage,
       name,
       email,
       mobileNo,
