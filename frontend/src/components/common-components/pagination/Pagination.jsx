@@ -1,3 +1,5 @@
+
+
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
@@ -65,14 +67,51 @@ const Pagination = ({
     if (!filteredData || filteredData.length === 0) return;
 
     const doc = new jsPDF();
-    const headers = Object.keys(filteredData[0]);
+
+    const keys = Object.keys(filteredData[0]);
+
+    const headers = keys.map((key) => ({
+      content: key.toUpperCase(),
+      styles: { fillColor: [220, 220, 220], halign: "center" },
+    }));
+
     const rows = filteredData.map((row) =>
-      headers.map((key) => row[key] ?? "")
+      keys.map((key) =>
+        (row[key] ?? "")
+          .toString()
+          .replace(/\n/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+      )
     );
 
     autoTable(doc, {
       head: [headers],
       body: rows,
+      startY: 10,
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        overflow: "ellipsize",
+        cellWidth: 'wrap',
+      },
+      headStyles: {
+        fillColor: [63, 81, 181],
+        textColor: 255,
+        halign: "center",
+        fontStyle: "bold",
+      },
+      bodyStyles: {
+        halign: "left",
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      columnStyles: keys.reduce((acc, key) => {
+        acc[key] = { cellWidth: 'wrap' };
+        return acc;
+      }, {}),
+      margin: { top: 10, left: 10, right: 10 },
     });
 
     doc.save("filtered_data.pdf");
@@ -271,3 +310,5 @@ const FilterSection = ({ searchTerm, setSearchTerm, filtersConfig }) => {
     </div>
   );
 };
+
+
