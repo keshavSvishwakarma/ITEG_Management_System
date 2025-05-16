@@ -22,6 +22,7 @@ const CommonTable = ({
   // Reset page to 1 on search term change
   useEffect(() => {
     setCurrentPage(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   // Filtered data based on search term
