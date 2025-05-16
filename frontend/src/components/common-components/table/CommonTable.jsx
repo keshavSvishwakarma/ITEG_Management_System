@@ -1,47 +1,63 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 const CommonTable = ({
   columns,
   data,
   editable,
   pagination,
-  rowsPerPage,
-  searchTerm,
-  actionButton, // New prop for action button
-  extraColumn, // New prop for additional column
+  rowsPerPage = 10,
+  searchTerm = "",
+  actionButton,
+  extraColumn,
+  currentPage: parentPage,
+  onPageChange,
 }) => {
   const [visibleColumns] = useState(columns.map((col) => col.key));
-  const [currentPage, setCurrentPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
+
+  const currentPage = parentPage ?? internalPage;
+  const setCurrentPage = onPageChange ?? setInternalPage;
+
+  // Reset page to 1 on search term change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Filtered data based on search term
   const filteredData = data.filter((row) =>
     Object.values(row)
       .map((val) => String(val ?? ""))
       .join(" ")
       .toLowerCase()
-      .includes((searchTerm ?? "").toLowerCase())
+      .includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
   return (
     <div className="w-full bg-[#f4f7fe] py-8">
       <div className="bg-white p-4 rounded-2xl shadow-md w-full">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="border-b-2 border-b-orange-300 ">
+            <thead className="border-b-2 border-b-orange-300">
               <tr>
                 <th className="text-start ps-4">
                   <input type="checkbox" />
+                </th>
+                <th className="px-4 py-2 text-center font-bold text-gray-700">
+                  S.No
                 </th>
                 {columns
                   .filter((col) => visibleColumns.includes(col.key))
                   .map((col) => (
                     <th
                       key={col.key}
-                      className="px-4 py-2 text-center font-medium text-gray-700"
+                      className="px-4 py-2 text-center font-bold text-gray-700"
                     >
                       {col.label}
                     </th>
@@ -64,6 +80,9 @@ const CommonTable = ({
                   <td className="px-4 py-2">
                     <input type="checkbox" />
                   </td>
+                  <td className="px-4 text-center py-2">
+                    {(currentPage - 1) * rowsPerPage + rowIndex + 1}
+                  </td>
                   {columns
                     .filter((col) => visibleColumns.includes(col.key))
                     .map((col) => (
@@ -71,11 +90,13 @@ const CommonTable = ({
                         {col.render ? (
                           col.render(row)
                         ) : col.key === "profile" ? (
-                          <img
-                            src={row[col.key]}
-                            alt="avatar"
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
+                          <div className="flex justify-center">
+                            <img
+                              src={row[col.key]}
+                              alt="avatar"
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          </div>
                         ) : (
                           row[col.key]
                         )}
@@ -83,7 +104,6 @@ const CommonTable = ({
                     ))}
                   {editable && (
                     <td className="px-4 text-center py-2">
-                      {/* Custom Action Button */}
                       {actionButton && actionButton(row)}
                     </td>
                   )}
@@ -100,7 +120,7 @@ const CommonTable = ({
 
         {pagination && (
           <div className="mt-4 flex flex-col md:flex-row justify-between items-center text-sm gap-3">
-            <p className="text-gray-600">Total Count {filteredData.length}</p>
+            <p className="text-gray-600">Total Count: {filteredData.length}</p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
@@ -113,6 +133,7 @@ const CommonTable = ({
               >
                 {"<"}
               </button>
+
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i}
@@ -126,6 +147,7 @@ const CommonTable = ({
                   {i + 1}
                 </button>
               ))}
+
               <button
                 onClick={() =>
                   setCurrentPage((p) => Math.min(p + 1, totalPages))
@@ -149,6 +171,8 @@ const CommonTable = ({
 
 export default CommonTable;
 
+
+
 // /* eslint-disable react/prop-types */
 // import { useState } from "react";
 
@@ -159,7 +183,8 @@ export default CommonTable;
 //   pagination,
 //   rowsPerPage,
 //   searchTerm,
-//   actionButton, // New prop for action button
+//   actionButton,
+//   extraColumn,
 // }) => {
 //   const [visibleColumns] = useState(columns.map((col) => col.key));
 //   const [currentPage, setCurrentPage] = useState(1);
@@ -183,17 +208,20 @@ export default CommonTable;
 //       <div className="bg-white p-4 rounded-2xl shadow-md w-full">
 //         <div className="overflow-x-auto">
 //           <table className="min-w-full text-sm">
-//             <thead className="border-b-2 border-b-orange-300 ">
+//             <thead className="border-b-2 border-b-orange-300">
 //               <tr>
 //                 <th className="text-start ps-4">
 //                   <input type="checkbox" />
+//                 </th>
+//                 <th className="px-4 py-2 text-center font-bold text-gray-700">
+//                   S.No
 //                 </th>
 //                 {columns
 //                   .filter((col) => visibleColumns.includes(col.key))
 //                   .map((col) => (
 //                     <th
 //                       key={col.key}
-//                       className="px-4 py-2 text-center font-medium  text-gray-700"
+//                       className="px-4 py-2 text-center font-bold text-gray-700"
 //                     >
 //                       {col.label}
 //                     </th>
@@ -201,6 +229,11 @@ export default CommonTable;
 //                 {editable && (
 //                   <th className="px-4 py-2 text-center text-gray-700">
 //                     Action
+//                   </th>
+//                 )}
+//                 {extraColumn && (
+//                   <th className="px-4 py-2 text-center text-gray-700">
+//                     {extraColumn.header}
 //                   </th>
 //                 )}
 //               </tr>
@@ -211,6 +244,9 @@ export default CommonTable;
 //                   <td className="px-4 py-2">
 //                     <input type="checkbox" />
 //                   </td>
+//                   <td className="px-4 text-center py-2">
+//                     {(currentPage - 1) * rowsPerPage + rowIndex + 1}
+//                   </td>
 //                   {columns
 //                     .filter((col) => visibleColumns.includes(col.key))
 //                     .map((col) => (
@@ -218,11 +254,13 @@ export default CommonTable;
 //                         {col.render ? (
 //                           col.render(row)
 //                         ) : col.key === "profile" ? (
-//                           <img
-//                             src={row[col.key]}
-//                             alt="avatar"
-//                             className="w-8 h-8 rounded-full object-cover"
-//                           />
+//                           <div className="flex justify-center">
+//                             <img
+//                               src={row[col.key]}
+//                               alt="avatar"
+//                               className="w-8 h-8 rounded-full object-cover"
+//                             />
+//                           </div>
 //                         ) : (
 //                           row[col.key]
 //                         )}
@@ -230,8 +268,12 @@ export default CommonTable;
 //                     ))}
 //                   {editable && (
 //                     <td className="px-4 text-center py-2">
-//                       {/* Custom Action Button */}
 //                       {actionButton && actionButton(row)}
+//                     </td>
+//                   )}
+//                   {extraColumn && (
+//                     <td className="px-4 text-center py-2">
+//                       {extraColumn.render && extraColumn.render(row)}
 //                     </td>
 //                   )}
 //                 </tr>
