@@ -38,11 +38,25 @@ const StudentDetailTable = () => {
     },
   ];
 
-  // Filter logic
-  const filteredData = data.filter((student) => {
+  // ✅ Add a new field 'latestLevel' to each student
+  const enhancedData = data.map((student) => {
+    const passedLevels = (student.level || []).filter(
+      (lvl) => lvl.result === "Pass"
+    );
+    const latestPassedLevel = passedLevels.length > 0
+      ? passedLevels[passedLevels.length - 1].levelNo
+      : "1A";
+
+    return {
+      ...student,
+      latestLevel: latestPassedLevel,
+    };
+  });
+
+  const filteredData = enhancedData.filter((student) => {
     const matchesSearch =
       searchTerm === "" ||
-      student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesTrack =
@@ -80,6 +94,7 @@ const StudentDetailTable = () => {
     { key: "fatherName", label: "Father's Name" },
     { key: "mobileNo", label: "Mobile" },
     { key: "course", label: "Course" },
+    { key: "latestLevel", label: "Level" },
     { key: "village", label: "Village" },
   ];
   const actionButton = (student) => (
@@ -119,12 +134,12 @@ const StudentDetailTable = () => {
 
 export default StudentDetailTable;
 
-// import { useState, useEffect } from "react";
-// import { useLocation, useNavigate } from "react-router-dom";
-// import back from "../../../assets/icons/back-icon.png";
-// import del from "../../../assets/icons/delete-icon.png";
-// import edit from "../../../assets/icons/edit-icon.png";
-// import { IoSearchOutline } from "react-icons/io5";
+
+
+
+
+// import { useState } from "react";
+// import Pagination from "../../common-components/pagination/Pagination";
 // import UserProfile from "../../common-components/user-profile/UserProfile";
 // import CommonTable from "../../common-components/table/CommonTable";
 
@@ -182,24 +197,83 @@ export default StudentDetailTable;
 // ];
 
 // const StudentDetailTable = () => {
-//   const location = useLocation();
+//   const { data = [], isLoading } = useAdmitedStudentsQuery();
+//   const [rowsPerPage, setRowsPerPage] = useState(10);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [selectedTracks, setSelectedTracks] = useState([]);
+//   const [selectedResults, setSelectedResults] = useState([]);
+//   const [selectedPercentages, setSelectedPercentages] = useState([]);
 //   const navigate = useNavigate();
 //   const queryParams = new URLSearchParams(location.search);
 //   const selectedYear = queryParams.get("year") || "Unknown Year";
 
-//   const [students, setStudents] = useState([]);
-//   const [searchTerm, setSearchTerm] = useState("");
+//   const filtersConfig = [
+//     {
+//       title: "Track",
+//       options: ["Harda", "Kannod", "Khategaon", "Nemawar"],
+//       selected: selectedTracks,
+//       setter: setSelectedTracks,
+//     },
+//     {
+//       title: "Result",
+//       options: ["Pass", "Fail"],
+//       selected: selectedResults,
+//       setter: setSelectedResults,
+//     },
+//     {
+//       title: "Interview",
+//       options: ["50-60%", "60-70%", "70-80%", "80-90%", "90-100%"],
+//       selected: selectedPercentages,
+//       setter: setSelectedPercentages,
+//     },
+//   ];
 
-//   useEffect(() => {
-//     const filteredStudents = allStudents.filter(
-//       (student) => student.year === selectedYear
-//     );
-//     setStudents(filteredStudents);
-//   }, [selectedYear]);
+//   const filteredData = data.filter((student) => {
+//     const matchesSearch =
+//       searchTerm === "" ||
+//       student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
 //   const openStudentProfile = (student) => {
 //     navigate(`/student-profile/${student.id}`, { state: { student } });
 //   };
+
+//     const matchesResult =
+//       selectedResults.length === 0 || selectedResults.includes(student.result);
+
+//     const matchesPercentage =
+//       selectedPercentages.length === 0 ||
+//       selectedPercentages.some((range) => {
+//         const [min, max] = range.split("-").map((v) => parseFloat(v));
+//         return (
+//           student.interviewPercentage >= min &&
+//           student.interviewPercentage <= max
+//         );
+//       });
+
+//     return matchesSearch && matchesTrack && matchesResult && matchesPercentage;
+//   });
+
+//   const columns = [
+//     { key: "profile", label: "Profile" },
+//     { key: "fullName", label: "Full Name" },
+//     { key: "fatherName", label: "Father's Name" },
+//     { key: "mobileNo", label: "Mobile" },
+//     { key: "course", label: "Course" },
+//     { key: "level", label: "Level" },
+//     { key: "village", label: "Village" },
+//   ];
+
+//   const actionButton = (student) => (
+//     <button
+//       onClick={() =>
+//         navigate(`/student-profile/${student._id}`, { state: { student } })
+//       }
+//       className="px-3 py-1 rounded"
+//     >
+//       <img src={edit} alt="edit-icon" className="w-5 h-5" />
+//     </button>
+//   );
 
 //   return (
 //     <>
