@@ -1,7 +1,5 @@
 
 
-
-
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
@@ -10,7 +8,7 @@ import del from "../../../assets/icons/delete-icon.png";
 import filtericon from "../../../assets/icons/filter.png";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable from "jspdf-autotable"; // ✅ This is necessary
 
 const Pagination = ({
   // rowsPerPage,
@@ -26,7 +24,6 @@ const Pagination = ({
   setSearchTerm,
   filtersConfig,
   filteredData,
-  setFilteredData, // 👈 Add this
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [downloadDropdown, setDownloadDropdown] = useState(false);
@@ -37,17 +34,6 @@ const Pagination = ({
   const handleSelect = (value) => {
     setRowsPerPage(value);
     setShowDropdown(false);
-  };
-
-  const handleDeleteAll = () => {
-    if (filteredData.length === 0) return;
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete all filtered data?"
-    );
-
-    if (confirmDelete) {
-      setFilteredData([]);
-    }
   };
 
 
@@ -85,52 +71,54 @@ const Pagination = ({
     XLSX.writeFile(workbook, "filtered_data.xlsx");
   };
 
-  // ✅ Capitalization helper
-  const capitalize = (str) =>
-    str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
-
   const handleDownloadPDF = () => {
     if (!filteredData || filteredData.length === 0) return;
 
     const doc = new jsPDF();
 
-    const columns = [
-      { header: "S. No.", dataKey: "sno" },
-      { header: "First Name", dataKey: "firstName" },
-      { header: "Last Name", dataKey: "lastName" },
-      { header: "Track", dataKey: "track" },
-      { header: "Mobile", dataKey: "mobile" },
-      { header: "Subject", dataKey: "subject" },
-    ];
+    const keys = Object.keys(filteredData[0]);
 
-    const rows = filteredData.map((item, index) => ({
-      sno: index + 1,
-      firstName: capitalize(item.firstName),
-      lastName: capitalize(item.lastName),
-      track: item.track || "",
-      mobile: item.mobile || "",
-      subject: item.subject || "",
+    const headers = keys.map((key) => ({
+      content: key.toUpperCase(),
+      styles: { fillColor: [220, 220, 220], halign: "center" },
     }));
 
+    const rows = filteredData.map((row) =>
+      keys.map((key) =>
+        (row[key] ?? "")
+          .toString()
+          .replace(/\n/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+      )
+    );
+
     autoTable(doc, {
-      head: [columns.map((col) => col.header)],
-      body: rows.map((row) => columns.map((col) => row[col.dataKey])),
+      head: [headers],
+      body: rows,
       startY: 10,
       styles: {
         fontSize: 8,
         cellPadding: 3,
-        overflow: "linebreak",
-        cellWidth: "wrap",
+        overflow: "ellipsize",
+        cellWidth: 'wrap',
       },
       headStyles: {
         fillColor: [63, 81, 181],
         textColor: 255,
-        halign: "left",
+        halign: "center",
         fontStyle: "bold",
+      },
+      bodyStyles: {
+        halign: "left",
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
+      columnStyles: keys.reduce((acc, key) => {
+        acc[key] = { cellWidth: 'wrap' };
+        return acc;
+      }, {}),
       margin: { top: 10, left: 10, right: 10 },
     });
 
@@ -152,7 +140,9 @@ const Pagination = ({
 
   return (
     <div className="flex justify-between items-center w-full flex-wrap gap-4 py-5">
+      {/* Entries Dropdown + Download Buttons */}
       <div className="flex items-center">
+        {/* Entries Dropdown */}
         <div className="relative w-fit" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown((prev) => !prev)}
@@ -178,6 +168,7 @@ const Pagination = ({
           )}
         </div>
 
+        {/* Download Dropdown */}
         <div className="relative" ref={downloadRef}>
           <button
             onClick={() => setDownloadDropdown(!downloadDropdown)}
@@ -218,13 +209,14 @@ const Pagination = ({
           )}
         </div>
 
+        {/* Delete Button */}
         <button className="bg-red-200 p-2 px-2.5 border rounded">
-          
           <img className="h-5" src={del} alt="delete" />
 
         </button>
       </div>
 
+      {/* Search and Filter Section */}
       <FilterSection
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
