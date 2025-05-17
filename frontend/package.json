@@ -11,9 +11,11 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.0",
     "@reduxjs/toolkit": "^2.6.1",
     "@tanstack/react-table": "^8.21.3",
     "crypto-js": "^4.2.0",
+    "file-saver": "^2.0.5",
     "formik": "^2.4.6",
     "frontend": "file:",
     "jwt-decode": "^4.0.0",
@@ -27,6 +29,7 @@
     "react-table": "^7.8.0",
     "recharts": "^2.15.1",
     "router": "^2.2.0",
+    "xlsx": "^0.18.5",
     "yup": "^1.6.1"
   },
   "devDependencies": {
