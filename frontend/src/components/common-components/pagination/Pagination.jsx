@@ -1,5 +1,6 @@
 
 
+<<<<<<< HEAD
 // /* eslint-disable react/prop-types */
 // import { useState, useRef, useEffect } from "react";
 // import { ChevronDown, ChevronRight, Search } from "lucide-react";
@@ -321,6 +322,8 @@
 //     </div>
 //   );
 // };
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 /* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
@@ -329,7 +332,11 @@ import del from "../../../assets/icons/delete-icon.png";
 import filtericon from "../../../assets/icons/filter.png";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
+<<<<<<< HEAD
 import autoTable from "jspdf-autotable";
+=======
+import autoTable from "jspdf-autotable"; // ✅ This is necessary
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 
 const Pagination = ({
   rowsPerPage,
@@ -350,6 +357,7 @@ const Pagination = ({
     setShowDropdown(false);
   };
 
+<<<<<<< HEAD
   const handleDownloadCSV = () => {
     if (!filteredData || filteredData.length === 0) return;
 
@@ -377,6 +385,19 @@ const Pagination = ({
     filteredData.forEach((row) => {
       const values = fields.map(
         (field) => `"${(row[field] ?? "").toString().replace(/"/g, '""')}"`
+=======
+
+  const handleDownloadCSV = () => {
+    if (!filteredData || filteredData.length === 0) return;
+
+    const csvRows = [];
+    const headers = Object.keys(filteredData[0]);
+    csvRows.push(headers.join(","));
+
+    filteredData.forEach((row) => {
+      const values = headers.map(
+        (header) => `"${(row[header] ?? "").toString().replace(/"/g, '""')}"`
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
       );
       csvRows.push(values.join(","));
     });
@@ -395,6 +416,7 @@ const Pagination = ({
   const handleDownloadExcel = () => {
     if (!filteredData || filteredData.length === 0) return;
 
+<<<<<<< HEAD
     const toTitleCase = (str) =>
       str
         .toLowerCase()
@@ -414,17 +436,24 @@ const Pagination = ({
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(filtered);
+=======
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Data");
     XLSX.writeFile(workbook, "filtered_data.xlsx");
   };
 
+<<<<<<< HEAD
   // *** Updated handleDownloadPDF with Full Name concatenation ***
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
   const handleDownloadPDF = () => {
     if (!filteredData || filteredData.length === 0) return;
 
     const doc = new jsPDF();
 
+<<<<<<< HEAD
     const toTitleCase = (str) =>
       str
         .toLowerCase()
@@ -450,13 +479,38 @@ const Pagination = ({
 
     autoTable(doc, {
       head: [tableHeaders],
+=======
+    const keys = Object.keys(filteredData[0]);
+
+    const headers = keys.map((key) => ({
+      content: key.toUpperCase(),
+      styles: { fillColor: [220, 220, 220], halign: "center" },
+    }));
+
+    const rows = filteredData.map((row) =>
+      keys.map((key) =>
+        (row[key] ?? "")
+          .toString()
+          .replace(/\n/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+      )
+    );
+
+    autoTable(doc, {
+      head: [headers],
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
       body: rows,
       startY: 10,
       styles: {
         fontSize: 8,
         cellPadding: 3,
         overflow: "ellipsize",
+<<<<<<< HEAD
         cellWidth: "wrap",
+=======
+        cellWidth: 'wrap',
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
       },
       headStyles: {
         fillColor: [63, 81, 181],
@@ -465,11 +519,22 @@ const Pagination = ({
         fontStyle: "bold",
       },
       bodyStyles: {
+<<<<<<< HEAD
         halign: "center",
+=======
+        halign: "left",
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
+<<<<<<< HEAD
+=======
+      columnStyles: keys.reduce((acc, key) => {
+        acc[key] = { cellWidth: 'wrap' };
+        return acc;
+      }, {}),
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
       margin: { top: 10, left: 10, right: 10 },
     });
 
@@ -491,7 +556,12 @@ const Pagination = ({
 
   return (
     <div className="flex justify-between items-center w-full flex-wrap gap-4 py-5">
+<<<<<<< HEAD
+=======
+      {/* Entries Dropdown + Download Buttons */}
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
       <div className="flex items-center">
+        {/* Entries Dropdown */}
         <div className="relative w-fit" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown((prev) => !prev)}
@@ -506,9 +576,8 @@ const Pagination = ({
                 <li
                   key={option}
                   onClick={() => handleSelect(option)}
-                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${
-                    rowsPerPage === option ? "bg-blue-100 font-semibold" : ""
-                  }`}
+                  className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${rowsPerPage === option ? "bg-blue-100 font-semibold" : ""
+                    }`}
                 >
                   {option}
                 </li>
@@ -617,10 +686,15 @@ const FilterSection = ({ searchTerm, setSearchTerm, filtersConfig }) => {
           <input
             type="text"
             placeholder="Search..."
+<<<<<<< HEAD
             className="outline-none border-none px-2 py-1 w-48 h-10 text-sm bg-white"
+=======
+            className="outline-none border-none ring-0 focus:ring-0 focus:outline-none px-2 py-1 w-48 h-10 text-sm bg-white"
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+
         </div>
       </div>
 
@@ -669,7 +743,10 @@ const FilterSection = ({ searchTerm, setSearchTerm, filtersConfig }) => {
     </div>
   );
 };
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb

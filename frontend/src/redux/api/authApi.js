@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-keys */
 // src/features/api/authApi.js
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import CryptoJS from "crypto-js";
@@ -126,36 +127,11 @@ export const authApi = createApi({
     // login with goggle
     loginWithGoogle: builder.mutation({
       query: () => ({
-        url: `/google`,
+        url: "/admission/students/getall",
         method: "GET",
       }),
     }),
-
-
-
-    // ----otp-----
-    // verify the otp
-    verifyOtp: builder.mutation({
-      query: (payload) => ({
-        url: import.meta.env.VITE_LOGIN_OTP_VERIFY, // e.g., /auth/verify-otp
-        method: "POST",
-        body: payload, // { email, otp }
-      }),
-    }),
-    // send the otp
-    sendOtp: builder.mutation({
-      query: (payload) => ({
-        url: import.meta.env.VITE_LOGIN_OTP,
-        method: "POST",
-        body: payload,
-      }),
-    }),
-
-
-    // ---------admission process-------------
-
-    // get the students for admission process
-    getAllStudents: builder.query({
+    admitedStudents: builder.query({
       query: () => ({
         url: import.meta.env.VITE_GET_ALL_STUDENTS,
         method: "GET",
@@ -185,10 +161,6 @@ export const authApi = createApi({
 
 export const {
   useLoginMutation,
-  useLoginWithGoogleMutation,
-  useSendOtpMutation,
-  useVerifyOtpMutation,
-  useRefreshTokenMutation,
   useGetAllStudentsQuery,
   useAdmitedStudentsQuery,
   useGetStudentByIdQuery,

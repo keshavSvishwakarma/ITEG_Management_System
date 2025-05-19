@@ -336,7 +336,11 @@ const StudentList = () => {
     <>
       <UserProfile heading="Admission Process" />
 
+<<<<<<< HEAD
       <div className="border bg-white shadow-sm rounded-lg px-5">
+=======
+      <div className="mt-5 border bg-white shadow-sm rounded-lg px-5">
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
         <div className="flex justify-between items-center flex-wrap gap-4">
           <Pagination
             rowsPerPage={rowsPerPage}
@@ -353,11 +357,10 @@ const StudentList = () => {
             <p
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`cursor-pointer pb-2 border-b-2 ${
-                activeTab === tab
-                  ? "border-orange-400 font-semibold"
-                  : "border-transparent"
-              }`}
+              className={`cursor-pointer pb-2 border-b-2 ${activeTab === tab
+                ? "border-orange-400 font-semibold"
+                : "border-transparent"
+                }`}
             >
               {tab}
             </p>
@@ -381,6 +384,7 @@ const StudentList = () => {
 };
 
 export default StudentList;
+<<<<<<< HEAD
 
 // import { useGetAllStudentsQuery } from "../../../redux/api/authApi";
 // import CommonTable from "../../common-components/table/CommonTable";
@@ -763,3 +767,5 @@ export default StudentList;
 // };
 
 // export default StudentList;
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb

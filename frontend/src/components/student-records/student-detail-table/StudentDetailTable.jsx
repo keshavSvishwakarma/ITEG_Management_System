@@ -1,20 +1,22 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../../common-components/pagination/Pagination";
 import UserProfile from "../../common-components/user-profile/UserProfile";
 import { useAdmitedStudentsQuery } from "../../../redux/api/authApi";
 import CommonTable from "../../common-components/table/CommonTable";
-import { useNavigate } from "react-router-dom";
 import edit from "../../../assets/icons/edit-fill-icon.png";
 
 const StudentDetailTable = () => {
   const { data = [], isLoading } = useAdmitedStudentsQuery();
+  const location = useLocation();
+  const selectedLevel = location.state?.level || null;
+  const navigate = useNavigate();
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [selectedResults, setSelectedResults] = useState([]);
   const [selectedPercentages, setSelectedPercentages] = useState([]);
-  const navigate = useNavigate();
 
   const toTitleCase = (str) =>
     str
@@ -23,7 +25,10 @@ const StudentDetailTable = () => {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
+<<<<<<< HEAD
   // Define dynamic filter config
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
   const filtersConfig = [
     {
       title: "Track",
@@ -45,14 +50,24 @@ const StudentDetailTable = () => {
     },
   ];
 
+<<<<<<< HEAD
   // ✅ Add a new field 'latestLevel' to each student
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
   const enhancedData = data.map((student) => {
     const passedLevels = (student.level || []).filter(
       (lvl) => lvl.result === "Pass"
     );
+<<<<<<< HEAD
     const latestPassedLevel = passedLevels.length > 0
       ? passedLevels[passedLevels.length - 1].levelNo
       : "1A";
+=======
+    const latestPassedLevel =
+      passedLevels.length > 0
+        ? passedLevels[passedLevels.length - 1].levelNo
+        : "1A";
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 
     return {
       ...student,
@@ -85,15 +100,28 @@ const StudentDetailTable = () => {
         );
       });
 
-    return matchesSearch && matchesTrack && matchesResult && matchesPercentage;
+    const matchesLevel =
+      !selectedLevel || student.latestLevel === selectedLevel;
+
+    return (
+      matchesSearch &&
+      matchesTrack &&
+      matchesResult &&
+      matchesPercentage &&
+      matchesLevel
+    );
   });
 
-  // Define table columns
   const columns = [
     {
       key: "fullName",
+<<<<<<< HEAD
       label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`),
 
+=======
+      label: "Full Name",
+      render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`),
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
     },
     { key: "fatherName", label: "Father's Name" },
     { key: "studentMobile", label: "Mobile" },
@@ -101,6 +129,10 @@ const StudentDetailTable = () => {
     { key: "latestLevel", label: "Level" },
     { key: "village", label: "Village" },
   ];
+<<<<<<< HEAD
+=======
+
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
   const actionButton = (student) => (
     <button
       onClick={() =>
@@ -111,9 +143,15 @@ const StudentDetailTable = () => {
       <img src={edit} alt="edit-icon" className="w-5 h-5" />
     </button>
   );
+
   return (
     <>
       <UserProfile showBackButton heading="Admitted Students" />
+      {selectedLevel && (
+        <div className="px-10 pb-5 text-md text-gray-700">
+          Showing students of <strong>Level {selectedLevel}</strong>
+        </div>
+      )}
       <div className="border bg-white shadow-sm rounded-lg px-5">
         <Pagination
           rowsPerPage={rowsPerPage}
@@ -138,6 +176,7 @@ const StudentDetailTable = () => {
 
 export default StudentDetailTable;
 
+<<<<<<< HEAD
 
 
 
@@ -146,62 +185,21 @@ export default StudentDetailTable;
 // import Pagination from "../../common-components/pagination/Pagination";
 // import UserProfile from "../../common-components/user-profile/UserProfile";
 // import CommonTable from "../../common-components/table/CommonTable";
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 
-// const allStudents = [
-//   {
-//     id: "1",
-//     name: "Ana Sha",
-//     fatherName: "John Sha",
-//     mobile: "8123456787",
-//     village: "Harda",
-//     course: "Iteg",
-//     year: "1st Year",
-//     profilePhoto: "https://randomuser.me/api/portraits/women/1.jpg",
-//   },
-//   {
-//     id: "2",
-//     name: "Rohan Das",
-//     fatherName: "Mohan Das",
-//     mobile: "9123456789",
-//     village: "Kannod",
-//     course: "B.Tech",
-//     year: "2nd Year",
-//     profilePhoto: "https://randomuser.me/api/portraits/men/2.jpg",
-//   },
-//   {
-//     id: "3",
-//     name: "Priya Mehta",
-//     fatherName: "Shyam Mehta",
-//     mobile: "7023456789",
-//     village: "Satwas",
-//     course: "MBA",
-//     year: "3rd Year",
-//     profilePhoto: "https://randomuser.me/api/portraits/women/3.jpg",
-//   },
-//   {
-//     id: "4",
-//     name: "Raj Gupta",
-//     fatherName: "Amit Gupta",
-//     mobile: "8523456789",
-//     village: "Narsullaganj",
-//     course: "B.Sc",
-//     year: "1st Year",
-//     profilePhoto: "https://randomuser.me/api/portraits/men/4.jpg",
-//   },
-//   {
-//     id: "5",
-//     name: "Sita Verma",
-//     fatherName: "Harish Verma",
-//     mobile: "9623456789",
-//     village: "Khategaon",
-//     course: "M.Tech",
-//     year: "2nd Year",
-//     profilePhoto: "https://randomuser.me/api/portraits/women/5.jpg",
-//   },
-// ];
+
+// import { useState } from "react";
+// import Pagination from "../../common-components/pagination/Pagination";
+// import UserProfile from "../../common-components/user-profile/UserProfile";
+// import { useAdmitedStudentsQuery } from "../../../redux/api/authApi";
+// import CommonTable from "../../common-components/table/CommonTable";
+// import { useNavigate } from "react-router-dom";
+// import edit from "../../../assets/icons/edit-fill-icon.png";
 
 // const StudentDetailTable = () => {
 //   const { data = [], isLoading } = useAdmitedStudentsQuery();
+<<<<<<< HEAD
 //   const [rowsPerPage, setRowsPerPage] = useState(10);
 //   const [searchTerm, setSearchTerm] = useState("");
 //   const [selectedTracks, setSelectedTracks] = useState([]);
@@ -237,11 +235,75 @@ export default StudentDetailTable;
 //       searchTerm === "" ||
 //       student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 //       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
+=======
 
-//   const openStudentProfile = (student) => {
-//     navigate(`/student-profile/${student.id}`, { state: { student } });
-//   };
+//   const [rowsPerPage, setRowsPerPage] = useState(10);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [selectedTracks, setSelectedTracks] = useState([]);
+//   const [selectedResults, setSelectedResults] = useState([]);
+//   const [selectedPercentages, setSelectedPercentages] = useState([]);
+//   const navigate = useNavigate();
 
+//   const toTitleCase = (str) =>
+//     str
+//       ?.toLowerCase()
+//       .split(" ")
+//       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+//       .join(" ");
+
+//   // Define dynamic filter config
+//   const filtersConfig = [
+//     {
+//       title: "Track",
+//       options: ["Harda", "Kannod", "Khategaon", "Nemawar"],
+//       selected: selectedTracks,
+//       setter: setSelectedTracks,
+//     },
+//     {
+//       title: "Result",
+//       options: ["Pass", "Fail"],
+//       selected: selectedResults,
+//       setter: setSelectedResults,
+//     },
+//     {
+//       title: "Interview",
+//       options: ["50-60%", "60-70%", "70-80%", "80-90%", "90-100%"],
+//       selected: selectedPercentages,
+//       setter: setSelectedPercentages,
+//     },
+//   ];
+
+//   // ✅ Add a new field 'latestLevel' to each student
+//   const enhancedData = data.map((student) => {
+//     const passedLevels = (student.level || []).filter(
+//       (lvl) => lvl.result === "Pass"
+//     );
+//     const latestPassedLevel = passedLevels.length > 0
+//       ? passedLevels[passedLevels.length - 1].levelNo
+//       : "1A";
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
+
+//     return {
+//       ...student,
+//       latestLevel: latestPassedLevel,
+//     };
+//   });
+
+<<<<<<< HEAD
+=======
+//   const filteredData = enhancedData.filter((student) => {
+//     const matchesSearch =
+//       searchTerm === "" ||
+//       student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+//     const matchesTrack =
+//       selectedTracks.length === 0 ||
+//       selectedTracks.some(
+//         (track) => track.toLowerCase() === (student.track || "").toLowerCase()
+//       );
+
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 //     const matchesResult =
 //       selectedResults.length === 0 || selectedResults.includes(student.result);
 
@@ -258,6 +320,7 @@ export default StudentDetailTable;
 //     return matchesSearch && matchesTrack && matchesResult && matchesPercentage;
 //   });
 
+<<<<<<< HEAD
 //   const columns = [
 //     { key: "profile", label: "Profile" },
 //     { key: "fullName", label: "Full Name" },
@@ -268,6 +331,21 @@ export default StudentDetailTable;
 //     { key: "village", label: "Village" },
 //   ];
 
+=======
+//   // Define table columns
+//   const columns = [
+//     {
+//       key: "fullName",
+//       label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`),
+
+//     },
+//     { key: "fatherName", label: "Father's Name" },
+//     { key: "studentMobile", label: "Mobile" },
+//     { key: "course", label: "Course" },
+//     { key: "latestLevel", label: "Level" },
+//     { key: "village", label: "Village" },
+//   ];
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 //   const actionButton = (student) => (
 //     <button
 //       onClick={() =>
@@ -278,84 +356,35 @@ export default StudentDetailTable;
 //       <img src={edit} alt="edit-icon" className="w-5 h-5" />
 //     </button>
 //   );
+<<<<<<< HEAD
 
+=======
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 //   return (
 //     <>
-//       <div className="w-full flex justify-between px-4">
-//         <div className="flex items-center mb-6">
-//           <img
-//             className="w-5 cursor-pointer"
-//             src={back}
-//             alt="back"
-//             onClick={() => navigate(-1)}
-//           />
-//         </div>
-//         <UserProfile />
+//       <UserProfile showBackButton heading="Admitted Students" />
+//       <div className="border bg-white shadow-sm rounded-lg px-5">
+//         <Pagination
+//           rowsPerPage={rowsPerPage}
+//           setRowsPerPage={setRowsPerPage}
+//           searchTerm={searchTerm}
+//           setSearchTerm={setSearchTerm}
+//           filtersConfig={filtersConfig}
+//         />
 //       </div>
-
-//       <div className="p-6 w-[80vw]">
-//         <div className="bg-white shadow-md p-10 rounded-lg">
-//           <div className="flex items-center mb-6">
-//             <h2 className="text-2xl font-semibold ml-4">
-//               {selectedYear} Student Details
-//             </h2>
-//           </div>
-
-//           <div className="flex justify-between items-center mb-4">
-//             <div className="flex gap-4">
-//               <button className="px-4 py-2 border border-dark rounded">
-//                 Download
-//               </button>
-//               <button className="px-4 py-2 bg-red-200 text-white rounded shadow">
-//                 <img src={del} alt="delete icon" />
-//               </button>
-//             </div>
-//             <div className="relative w-64">
-//               <input
-//                 type="text"
-//                 placeholder="Search..."
-//                 className="border rounded p-2 w-full pr-10"
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//               />
-//               <IoSearchOutline className="absolute right-3 top-3 text-gray-500" />
-//             </div>
-//           </div>
-
-//           <CommonTable
-//             data={students}
-//             searchTerm={searchTerm}
-//             onRowClick={openStudentProfile}
-//             columnsToShow={[
-//               "profilePhoto",
-//               "name",
-//               "fatherName",
-//               "mobile",
-//               "course",
-//               "village",
-//             ]}
-//             extraColumn={{
-//               header: "Edit",
-//               render: (student) => (
-//                 <img
-//                   className="w-5 cursor-pointer mx-auto"
-//                   src={edit}
-//                   alt="edit"
-//                   onClick={(e) => {
-//                     e.stopPropagation();
-//                     navigate("/student-edit-profile", {
-//                       state: { student },
-//                     });
-//                   }}
-//                 />
-//               ),
-//             }}
-//           />
-
-//         </div>
-//       </div>
+//       <CommonTable
+//         columns={columns}
+//         data={filteredData}
+//         editable={true}
+//         pagination={true}
+//         rowsPerPage={rowsPerPage}
+//         isLoading={isLoading}
+//         actionButton={actionButton}
+//       />
 //     </>
 //   );
 // };
 
 // export default StudentDetailTable;
+
+

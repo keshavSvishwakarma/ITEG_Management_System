@@ -2,9 +2,15 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+<<<<<<< HEAD
 const Otp = require("../models/otpModel");
 const { sendResetLinkEmail } = require("../helpers/sendOtp");
 const generateOtp = require("../helpers/generateOtp");
+=======
+// const Otp = require("../models/otpModel");
+const { sendResetLinkEmail } = require("../helpers/sendOtp");
+// const generateOtp = require("../helpers/generateOtp");
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
 const cloudinary = require('cloudinary').v2;
 
 require("dotenv").config();
@@ -371,7 +377,11 @@ exports.googleAuthCallback = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+<<<<<<< HEAD
     const redirectUrl = `${process.env.GOOGLE_REDIRECT_URI}?token=${token}&refreshToken=${refreshToken}&user=${encodeURIComponent(JSON.stringify(user))}`;
+=======
+     const redirectUrl = `${process.env.GOOGLE_REDIRECT_URI}?token=${token}&refreshToken=${refreshToken}&userId=${user._id}`;
+>>>>>>> 81e6086d0a4241236f42b9b6836a6d606fb426cb
     return res.redirect(redirectUrl);
   } catch (error) {
     console.error('Google login failed:', error);
