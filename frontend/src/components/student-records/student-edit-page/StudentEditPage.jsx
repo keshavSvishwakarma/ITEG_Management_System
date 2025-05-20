@@ -5,7 +5,9 @@ import UserProfile from "../../common-components/user-profile/UserProfile";
 
 const StudentEditPage = () => {
   // const fileInputRef = useRef(null);
-  const [imageSrc, setImageSrc] = useState("https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg"); // Set default or placeholder
+  const [imageSrc, setImageSrc] = useState(
+    "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg"
+  ); // Set default or placeholder
   const location = useLocation();
   // const navigate = useNavigate();
   const studentData = location.state?.student || {};
@@ -103,7 +105,6 @@ const StudentEditPage = () => {
     <>
       <UserProfile showBackButton heading="Student Edit Page" />
       <div className="w-[80vw] p-3 min-h-screen ">
-
         <button
           type="button"
           className="absolute right-8 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 py-2 rounded-lg"
@@ -336,3 +337,261 @@ const StudentEditPage = () => {
 };
 
 export default StudentEditPage;
+
+// import { useRef, useState } from "react";
+// import { useLocation } from "react-router-dom";
+// import { FaCamera } from "react-icons/fa";
+// import { Formik, Form } from "formik";
+// import * as Yup from "yup";
+// import UserProfile from "../../common-components/user-profile/UserProfile";
+// import TextInput from "../../common-components/common-feild/TextInput";
+// import SelectInput from "../../common-components/common-feild/SelectInput";
+// import RadioGroup from "../../common-components/common-feild/RadioGroup";
+// import CheckboxGroup from "../../common-components/common-feild/CheckboxGroup";
+
+// const StudentEditPage = () => {
+//   const fileInputRef = useRef(null);
+//   const [imageSrc, setImageSrc] = useState(
+//     "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg"
+//   );
+//   const location = useLocation();
+//   const studentData = location.state?.student || {};
+
+//   const initialValues = {
+//     firstName: studentData.name || "",
+//     lastName: "",
+//     contactNumber: studentData.mobile || "",
+//     fatherName: studentData.fatherName || "",
+//     gender: "",
+//     track: studentData.course || "",
+//     address: studentData.village || "",
+//     twelfthSubject: "",
+//     twelfthPercentage: "",
+//     tenthPercentage: "",
+//     passoutYear: "",
+//     courseType: "Course",
+//     itegLevels: [],
+//     permission: false,
+//     permissionReason: "",
+//     placed: false,
+//     companyName: "",
+//     placementDate: "",
+//     imageSrc: imageSrc,
+//   };
+
+//   const validationSchema = Yup.object().shape({
+//     firstName: Yup.string().required("First name is required"),
+//     lastName: Yup.string().required("Last name is required"),
+//     contactNumber: Yup.string()
+//       .matches(/^\d{10}$/, "Must be a valid 10-digit number")
+//       .required("Contact number is required"),
+//     twelfthPercentage: Yup.number()
+//       .typeError("Enter a valid percentage")
+//       .min(0)
+//       .max(100)
+//       .required("12th percentage is required"),
+//     tenthPercentage: Yup.number()
+//       .typeError("Enter a valid percentage")
+//       .min(0)
+//       .max(100)
+//       .required("10th percentage is required"),
+//     passoutYear: Yup.string().required("Passout year is required"),
+//   });
+
+//   const handleImageClick = () => {
+//     fileInputRef.current?.click();
+//   };
+
+//   const handleFileChange = (e, setFieldValue) => {
+//     const file = e.target.files?.[0];
+//     if (file) {
+//       const reader = new FileReader();
+//       reader.onloadend = () => {
+//         setImageSrc(reader.result);
+//         setFieldValue("imageSrc", reader.result);
+//       };
+//       reader.readAsDataURL(file);
+//     }
+//   };
+
+//   const handleSubmit = (values) => {
+//     console.log("Submitted values:", values);
+//   };
+
+//   return (
+//     <div className="w-[80vw] p-4 min-h-screen">
+//       <UserProfile showBackButton heading="Student Edit Page" />
+
+//       <Formik
+//         initialValues={initialValues}
+//         validationSchema={validationSchema}
+//         onSubmit={handleSubmit}
+//       >
+//         {({ setFieldValue }) => (
+//           <Form className="space-y-10">
+//             {/* Save Button */}
+//             <div className="flex justify-end">
+//               <button
+//                 type="submit"
+//                 className="border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 py-2 rounded-lg"
+//               >
+//                 Save
+//               </button>
+//             </div>
+
+//             {/* Profile Image Upload */}
+//             <div className="flex items-center space-x-6">
+//               <div
+//                 className="relative w-40 h-40 rounded-full border-4 border-dotted border-orange-500 cursor-pointer"
+//                 onClick={handleImageClick}
+//               >
+//                 <img
+//                   className="w-full h-full rounded-full object-cover p-2"
+//                   src={imageSrc}
+//                   alt="Profile"
+//                 />
+//                 <div className="absolute bottom-2 right-2 bg-orange-500 rounded-full p-2">
+//                   <FaCamera className="text-white text-lg" />
+//                 </div>
+//                 <input
+//                   type="file"
+//                   ref={fileInputRef}
+//                   className="hidden"
+//                   accept="image/*"
+//                   onChange={(e) => handleFileChange(e, setFieldValue)}
+//                 />
+//               </div>
+//             </div>
+
+//             {/* Personal Info */}
+//             <div>
+//               <h2 className="text-2xl font-bold mb-4">Personal Information</h2>
+//               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//                 <TextInput label="First Name" name="firstName" />
+//                 <TextInput label="Last Name" name="lastName" />
+//                 <TextInput label="Contact Number" name="contactNumber" />
+//                 <TextInput label="Father's Name" name="fatherName" />
+//                 <SelectInput
+//                   label="Gender"
+//                   name="gender"
+//                   options={[
+//                     { value: "male", label: "Male" },
+//                     { value: "female", label: "Female" },
+//                   ]}
+//                 />
+//                 <SelectInput
+//                   label="Track"
+//                   name="Select Track"
+//                   options={[
+//                     { value: "", label: "Harda" },
+//                     { value: "Internship", label: "Khategaon" },
+//                   ]}
+//                 />
+//                 <TextInput label="Address" name="address" />
+//               </div>
+//             </div>
+
+//             {/* Academic Info */}
+//             <div>
+//               <h2 className="text-2xl font-bold mb-4  pt-6 border-t-2 border-orange-500">
+//                 Academic Details
+//               </h2>
+//               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//                 <TextInput label="12th Subject" name="twelfthSubject" />
+//                 <TextInput label="12th Percentage" name="twelfthPercentage" />
+//                 <TextInput label="10th Percentage" name="tenthPercentage" />
+//                 <TextInput label="Passout Year" name="passoutYear" />
+//                 <RadioGroup
+//                   label="Permission"
+//                   name="permission"
+//                   options={[
+//                     { label: "Course", value: true },
+//                     { label: "Diploma", value: false },
+//                   ]}
+//                 />
+//               </div>
+//             </div>
+
+//             {/* ITEG Levels */}
+//             {/* <div>
+//               <h2 className="text-2xl font-bold mb-4">ITEG Levels</h2>
+//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                 <CheckboxGroup
+//                   label=""
+//                   name="itegLevels"
+//                   options={[
+//                     { value: "level1", label: "1A Level" },
+//                     { value: "level2", label: "1B Level" },
+//                     { value: "level3", label: "1C Level" },
+//                   ]}
+//                 />
+//               </div>
+//               <div className="grid grid-cols-1 md:grid-cols-2 ">
+//                 <CheckboxGroup
+//                   label=""
+//                   name="itegLevels"
+//                   options={[
+//                     { value: "level4", label: "2A Level" },
+//                     { value: "level5", label: "2B Level" },
+//                     { value: "level6", label: "2C Level" },
+//                   ]}
+//                 />
+//               </div>
+//             </div> */}
+
+//             <div className="pt-6 border-t-2 border-orange-500">
+//               <h2 className="text-xl font-semibold text-blue-900 underline mb-4">
+//                 Iteg Levels
+//               </h2>
+//               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6">
+//                 <CheckboxGroup
+//                   label=""
+//                   name="itegLevels"
+//                   options={[
+//                     { value: "level1", label: "1A Level" },
+//                     { value: "level2", label: "1B Level" },
+//                     { value: "level3", label: "1C Level" },
+//                     { value: "level4", label: "2A Level" },
+//                     { value: "level5", label: "2B Level" },
+//                     { value: "level6", label: "2C Level" },
+//                   ]}
+//                 />
+//               </div>
+//             </div>
+
+//             {/* Permission Section */}
+
+//             <h2 className="text-2xl font-bold mb-4  ">Permission</h2>
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//               <TextInput label="Permission Reason" name="permissionReason" />
+
+//               <TextInput
+//                 label="Placement Date"
+//                 placeholder={"dd/mm//yyyy"}
+//                 name="placementDate"
+//                 type="date"
+//               />
+//             </div>
+
+//             {/* Placement Info */}
+//             <div>
+//               <h2 className="text-2xl font-bold mb-4">Placed</h2>
+
+//               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+//                 <TextInput label="Company Name" name="companyName" />
+//                 <TextInput
+//                   label="Placement Date"
+//                   placeholder={"dd/mm//yyyy"}
+//                   name="placementDate"
+//                   type="date"
+//                 />
+//               </div>
+//             </div>
+//           </Form>
+//         )}
+//       </Formik>
+//     </div>
+//   );
+// };
+
+// export default StudentEditPage;

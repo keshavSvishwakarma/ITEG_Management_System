@@ -58,3 +58,26 @@ export const interviewSchema = Yup.object({
   examDate: Yup.date().required("Required"),
 });
 
+
+// validation/studentValidation.js
+export const studentValidationSchema = Yup.object({
+  firstName: Yup.string().required("First name is required"),
+  lastName: Yup.string().required("Last name is required"),
+  contactNumber: Yup.string()
+    .matches(/^\d{10}$/, "Enter a valid 10-digit number")
+    .required("Contact number is required"),
+  fatherName: Yup.string().required("Father's name is required"),
+  gender: Yup.string().required("Gender is required"),
+  track: Yup.string().required("Track is required"),
+  address: Yup.string().required("Address is required"),
+  twelfthSubject: Yup.string().required("12th subject is required"),
+  twelfthPercentage: Yup.string()
+    .matches(/^\d{1,2}(\.\d{1,2})?$/, "Enter a valid percentage")
+    .required("Required"),
+  tenthPercentage: Yup.string()
+    .matches(/^\d{1,2}(\.\d{1,2})?$/, "Enter a valid percentage")
+    .required("Required"),
+  passoutYear: Yup.string()
+    .matches(/^\d{4}$/, "Enter a valid year")
+    .required("Required"),
+});
