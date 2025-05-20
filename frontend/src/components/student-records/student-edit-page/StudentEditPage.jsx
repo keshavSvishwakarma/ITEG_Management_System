@@ -5,7 +5,9 @@ import UserProfile from "../../common-components/user-profile/UserProfile";
 
 const StudentEditPage = () => {
   // const fileInputRef = useRef(null);
-  const [imageSrc, setImageSrc] = useState("https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg"); // Set default or placeholder
+  const [imageSrc, setImageSrc] = useState(
+    "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg"
+  ); // Set default or placeholder
   const location = useLocation();
   // const navigate = useNavigate();
   const studentData = location.state?.student || {};
@@ -101,9 +103,8 @@ const StudentEditPage = () => {
 
   return (
     <>
-      <UserProfile showBackButton heading="Student Edit Page" />
+      <UserProfile showBackButton heading="Profile Edit" />
       <div className="w-[80vw] p-3 min-h-screen ">
-
         <button
           type="button"
           className="absolute right-8 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 py-2 rounded-lg"
