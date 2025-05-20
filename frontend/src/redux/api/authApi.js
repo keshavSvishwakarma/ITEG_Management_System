@@ -137,11 +137,23 @@ export const authApi = createApi({
         method: "GET",
       }),
     }),
+
     // get admission process student by id
     getStudentById: builder.query({
       query: (id) => ({
         url: `${import.meta.env.VITE_GET_STUDENT_BY_ID}${id}`,
         method: "GET",
+      }),
+    }),
+
+    interviewCreate: builder.mutation({
+      query: ({ studentId, ...formData }) => ({
+        url: `${import.meta.env.VITE_INTERVIEW_CREATE}${studentId}`,
+        method: "POST",
+        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
       }),
     }),
 
@@ -163,6 +175,7 @@ export const {
   useLoginMutation,
   useGetAllStudentsQuery,
   useAdmitedStudentsQuery,
+  useInterviewCreateMutation,
   useGetStudentByIdQuery,
 } = authApi;
 
