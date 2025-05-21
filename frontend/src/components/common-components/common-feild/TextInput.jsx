@@ -11,7 +11,7 @@ const TextInput = ({ label, name, placeholder }) => (
       type="text"
       name={name}
       placeholder={placeholder}
-      className="input-style"
+      className="input-style w-full"
     />
     <ErrorMessage
       name={name}
