@@ -126,11 +126,34 @@ export const authApi = createApi({
     // login with goggle
     loginWithGoogle: builder.mutation({
       query: () => ({
-        url: `/google`,
+        url: import.meta.env.VITE_LOGIN_WITH_GOOGLE,
         method: "GET",
       }),
     }),
 
+    // ---- Forget Password API ----
+    forgetPassword: builder.mutation({
+      query: ({ email }) => ({
+        url: import.meta.env.VITE_FORGET_PASSWORD, // or your actual endpoint
+        method: "POST",
+        body: { email },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+
+    // ---- Reset Password API ----
+    resetPassword: builder.mutation({
+      query: ({ token, password }) => ({
+        url: `${import.meta.env.VITE_RESET_PASSWORD}/${token}`, // Token from URL
+        method: "POST",
+        body: { password },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
 
 
     // ----otp-----
@@ -169,6 +192,25 @@ export const authApi = createApi({
       }),
     }),
 
+    interviewCreate: builder.mutation({
+      query: ({ studentId, ...formData }) => ({
+        url: `${import.meta.env.VITE_INTERVIEW_CREATE}${studentId}`,
+        method: "POST",
+        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+
+    // get interview detail of student by id
+    getInterviewDetailById: builder.query({
+      query: (id) => ({
+        url: `${import.meta.env.VITE_INTERVIEW_DETAIL}${id}`,
+        method: "GET",
+      }),
+    }),
+
     // ---------admitted students-------------
 
     // get all the students for admitted process
@@ -186,11 +228,15 @@ export const authApi = createApi({
 export const {
   useLoginMutation,
   useLoginWithGoogleMutation,
+  useForgetPasswordMutation,
+  useResetPasswordMutation,
   useSendOtpMutation,
   useVerifyOtpMutation,
   useRefreshTokenMutation,
   useGetAllStudentsQuery,
   useAdmitedStudentsQuery,
+  useInterviewCreateMutation,
+  useGetInterviewDetailByIdQuery,
   useGetStudentByIdQuery,
 } = authApi;
 
