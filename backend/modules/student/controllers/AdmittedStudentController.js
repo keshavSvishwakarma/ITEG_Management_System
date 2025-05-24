@@ -336,65 +336,61 @@ exports.updatePermissionStudent = async (req, res) => {
 
 
 
-
 exports.updateAdmittedStudent = async (req, res) => {
   try {
     console.log("Received update request for admitted student:", req.body);
 
-    const { prkey } = req.body;
+    const prkey = req.updatedStudent?.prkey || req.body.prkey;
     if (!prkey) {
-      return res.status(400).json({ message: "Admission ID (prkey) is required" });
+      return res.status(400).json({ message: "Admission ID is required" });
     }
 
-    // Define which fields you want to allow updates for
+    const admittedStudent = await AdmissionProcess.findById(prkey);
+    if (!admittedStudent ) {
+      return res.status(404).json({ message: "Admission data not found" });
+    }
+
     const updateFields = {
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      fatherName: req.body.fatherName,
-      email: req.body.email,
-      studentMobile: req.body.studentMobile,
-      parentMobile: req.body.parentMobile,
-      gender: req.body.gender,
-      dob: req.body.dob,
-      aadharCard: req.body.aadharCard,
-      village: req.body.village,
-      track: req.body.track,
-      category: req.body.category,
-      stream: req.body.stream,
-      course: req.body.course,
-      subject12: req.body.subject12,
-      year12: req.body.year12,
-      percent12: req.body.percent12,
-      percent10: req.body.percent10,
-      address: req.body.address,
+      prkey: admittedStudent .prkey,
+      firstName: admittedStudent .firstName,
+      lastName: admittedStudent .lastName,
+      fatherName: admittedStudent .fatherName,
+      email: admittedStudent .email,
+      studentMobile: admittedStudent .studentMobile,
+      parentMobile: admittedStudent .parentMobile,
+      gender: admittedStudent .gender,
+      dob: admittedStudent .dob,
+      aadharCard: admittedStudent .aadharCard,
+      village: admittedStudent .village,
+      track: admittedStudent .track,
+      category: admittedStudent .category,
+      stream: admittedStudent .stream,
+      course: admittedStudent .course,
+      subject12: admittedStudent .subject12,
+      year12: admittedStudent .year12,
+      percent12: admittedStudent .percent12,
+      percent10: admittedStudent .percent10,
+      address: admittedStudent .address,
     };
 
-    // Remove undefined fields (in case partial update)
-    Object.keys(updateFields).forEach(key => {
-      if (updateFields[key] === undefined) {
-        delete updateFields[key];
-      }
-    });
-
     const updatedStudent = await AdmittedStudent.findOneAndUpdate(
-      { prkey }, // Match by prkey field
+      { admissionRef: admittedStudent.pr }, // Use unique field
       updateFields,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true } // Returns updated doc
     );
 
     if (!updatedStudent) {
       return res.status(404).json({ message: "Admitted student not found" });
     }
 
-    return res.status(200).json({
-      message: "Admitted student updated successfully",
-      data: updatedStudent,
-    });
+    return res
+      .status(200)
+      .json({ message: "Admitted student updated", data: updatedStudent });
   } catch (error) {
     console.error("Error during admitted student update:", error);
-    return res.status(500).json({
-      message: "Update failed",
-      error: error.message,
-    });
+    return res
+      .status(500)
+      .json({ message: "Update failed", error: error.message });
   }
 };
+
