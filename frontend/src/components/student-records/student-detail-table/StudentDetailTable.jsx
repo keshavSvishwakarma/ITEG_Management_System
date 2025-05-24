@@ -1,19 +1,29 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../../common-components/pagination/Pagination";
 import UserProfile from "../../common-components/user-profile/UserProfile";
 import { useAdmitedStudentsQuery } from "../../../redux/api/authApi";
 import CommonTable from "../../common-components/table/CommonTable";
-import { useNavigate } from "react-router-dom";
 import edit from "../../../assets/icons/edit-fill-icon.png";
 
 const StudentDetailTable = () => {
   const { data = [], isLoading } = useAdmitedStudentsQuery();
+  const location = useLocation();
+  const selectedLevel = location.state?.level || null;
+  const navigate = useNavigate();
+
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [selectedResults, setSelectedResults] = useState([]);
   const [selectedPercentages, setSelectedPercentages] = useState([]);
-  const navigate = useNavigate();
+
+  const toTitleCase = (str) =>
+    str
+      ?.toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 
   const filtersConfig = [
     {
@@ -36,10 +46,25 @@ const StudentDetailTable = () => {
     },
   ];
 
-  const filteredData = data.filter((student) => {
+  const enhancedData = data.map((student) => {
+    const passedLevels = (student.level || []).filter(
+      (lvl) => lvl.result === "Pass"
+    );
+    const latestPassedLevel =
+      passedLevels.length > 0
+        ? passedLevels[passedLevels.length - 1].levelNo
+        : "1A";
+
+    return {
+      ...student,
+      latestLevel: latestPassedLevel,
+    };
+  });
+
+  const filteredData = enhancedData.filter((student) => {
     const matchesSearch =
       searchTerm === "" ||
-      student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesTrack =
@@ -61,16 +86,28 @@ const StudentDetailTable = () => {
         );
       });
 
-    return matchesSearch && matchesTrack && matchesResult && matchesPercentage;
+    const matchesLevel =
+      !selectedLevel || student.latestLevel === selectedLevel;
+
+    return (
+      matchesSearch &&
+      matchesTrack &&
+      matchesResult &&
+      matchesPercentage &&
+      matchesLevel
+    );
   });
 
   const columns = [
-    { key: "profile", label: "Profile" },
-    { key: "fullName", label: "Full Name" },
+    {
+      key: "fullName",
+      label: "Full Name",
+      render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`),
+    },
     { key: "fatherName", label: "Father's Name" },
-    { key: "mobileNo", label: "Mobile" },
+    { key: "studentMobile", label: "Mobile" },
     { key: "course", label: "Course" },
-    { key: "level", label: "Level" },
+    { key: "latestLevel", label: "Level" },
     { key: "village", label: "Village" },
   ];
 
@@ -88,6 +125,11 @@ const StudentDetailTable = () => {
   return (
     <>
       <UserProfile showBackButton heading="Admitted Students" />
+      {selectedLevel && (
+        <div className="px-10 pb-5 text-md text-gray-700">
+          Showing students of <strong>Level {selectedLevel}</strong>
+        </div>
+      )}
       <div className="border bg-white shadow-sm rounded-lg px-5">
         <Pagination
           rowsPerPage={rowsPerPage}
@@ -112,6 +154,8 @@ const StudentDetailTable = () => {
 
 export default StudentDetailTable;
 
+
+
 // import { useState } from "react";
 // import Pagination from "../../common-components/pagination/Pagination";
 // import UserProfile from "../../common-components/user-profile/UserProfile";
@@ -129,6 +173,13 @@ export default StudentDetailTable;
 //   const [selectedResults, setSelectedResults] = useState([]);
 //   const [selectedPercentages, setSelectedPercentages] = useState([]);
 //   const navigate = useNavigate();
+
+//   const toTitleCase = (str) =>
+//     str
+//       ?.toLowerCase()
+//       .split(" ")
+//       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+//       .join(" ");
 
 //   // Define dynamic filter config
 //   const filtersConfig = [
@@ -152,11 +203,25 @@ export default StudentDetailTable;
 //     },
 //   ];
 
-//   // Filter logic
-//   const filteredData = data.filter((student) => {
+//   // ✅ Add a new field 'latestLevel' to each student
+//   const enhancedData = data.map((student) => {
+//     const passedLevels = (student.level || []).filter(
+//       (lvl) => lvl.result === "Pass"
+//     );
+//     const latestPassedLevel = passedLevels.length > 0
+//       ? passedLevels[passedLevels.length - 1].levelNo
+//       : "1A";
+
+//     return {
+//       ...student,
+//       latestLevel: latestPassedLevel,
+//     };
+//   });
+
+//   const filteredData = enhancedData.filter((student) => {
 //     const matchesSearch =
 //       searchTerm === "" ||
-//       student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 //       student.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
 //     const matchesTrack =
@@ -183,19 +248,23 @@ export default StudentDetailTable;
 
 //   // Define table columns
 //   const columns = [
-//     { key: "", label: "Profile" },
-//     { key: "fullName", label: "Full Name" },
-//     { key: "fullName", label: "Full Name" },
+//     {
+//       key: "fullName",
+//       label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`),
+
+//     },
 //     { key: "fatherName", label: "Father's Name" },
-//     { key: "mobileNo", label: "Mobile" },
+//     { key: "studentMobile", label: "Mobile" },
 //     { key: "course", label: "Course" },
-//     { key: "level", label: "Level" },
+//     { key: "latestLevel", label: "Level" },
 //     { key: "village", label: "Village" },
 //   ];
-//   const actionButton = () => (
+//   const actionButton = (student) => (
 //     <button
-//       onClick={() => navigate("/student-profile/:studentId")}
-//       className="px-3 py-1  rounded"
+//       onClick={() =>
+//         navigate(`/student-profile/${student._id}`, { state: { student } })
+//       }
+//       className="px-3 py-1 rounded"
 //     >
 //       <img src={edit} alt="edit-icon" className="w-5 h-5" />
 //     </button>
@@ -226,3 +295,5 @@ export default StudentDetailTable;
 // };
 
 // export default StudentDetailTable;
+
+
