@@ -81,7 +81,10 @@ const baseQueryWithAutoRefresh = async (args, api, extraOptions) => {
       localStorage.clear();
       window.location.href = "/login";
     }
+    
   }
+
+
 
   return result;
 };
@@ -131,6 +134,13 @@ export const authApi = createApi({
       }),
     }),
 
+    loginWithGoogleCallback: builder.mutation({
+      query: () => ({
+        url: import.meta.env.VITE_GOOGLE_CALLBACK,
+        method: "GET",
+      }),
+    }),
+
     // ---- Forget Password API ----
     forgetPassword: builder.mutation({
       query: ({ email }) => ({
@@ -155,7 +165,6 @@ export const authApi = createApi({
       }),
     }),
 
-
     // ----otp-----
     // verify the otp
     verifyOtp: builder.mutation({
@@ -173,7 +182,6 @@ export const authApi = createApi({
         body: payload,
       }),
     }),
-
 
     // ---------admission process-------------
 
@@ -220,8 +228,6 @@ export const authApi = createApi({
         method: "GET",
       }),
     }),
-
-
   }),
 });
 
