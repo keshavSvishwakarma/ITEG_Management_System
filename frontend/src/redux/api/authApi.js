@@ -5,16 +5,30 @@ import { logout, setCredentials } from "../auth/authSlice";
 
 const secretKey = "ITEG@123";
 
-//  Decrypt from localStorage
+// //  Decrypt from localStorage
+// const decrypt = (encrypted) => {
+//   try {
+//     const bytes = CryptoJS.AES.decrypt(encrypted, secretKey);
+//     return bytes.toString(CryptoJS.enc.Utf8);
+//   } catch (err) {
+//     console.error("Decryption failed:", err);
+//     return null;
+//   }
+// };
+
 const decrypt = (encrypted) => {
+  if (!encrypted) return null;
+
   try {
     const bytes = CryptoJS.AES.decrypt(encrypted, secretKey);
-    return bytes.toString(CryptoJS.enc.Utf8);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    return decrypted || null;
   } catch (err) {
     console.error("Decryption failed:", err);
     return null;
   }
 };
+
 
 //  Encrypt before storing
 const encrypt = (data) => CryptoJS.AES.encrypt(data, secretKey).toString();
@@ -23,12 +37,25 @@ const encrypt = (data) => CryptoJS.AES.encrypt(data, secretKey).toString();
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   credentials: "include",
+  // prepareHeaders: (headers) => {
+  //   const encryptedToken = localStorage.getItem("token");
+  //   const token = decrypt(encryptedToken);
+  //   if (token) headers.set("Authorization", `Bearer ${token}`);
+  //   return headers;
+  // },
   prepareHeaders: (headers) => {
-    const encryptedToken = localStorage.getItem("token");
-    const token = decrypt(encryptedToken);
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-    return headers;
-  },
+  const encryptedToken = localStorage.getItem("token");
+  const token = decrypt(encryptedToken);
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    console.warn("🔐 No valid token found, skipping Authorization header");
+  }
+
+  return headers;
+},
+
 });
 
 //  Auto-refresh logic

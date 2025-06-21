@@ -19,12 +19,17 @@ const passport = require("./config/passport.js");
 const app = express();
 // cors for frontend and backend communication
 setupSwagger(app);
+const allowedOrigins = process.env.FRONTEND_URL.split(",");
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // replace with your frontend URL
-    origin: '*', // or '*' to allow all
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    credentials: true, // only if you're using cookies or sessions
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed for this origin: " + origin));
+      }
+    },
+    credentials: true,
   })
 );
 
