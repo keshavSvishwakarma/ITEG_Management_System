@@ -39,7 +39,7 @@ function App() {
           />
 
           {/*  Public routes */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/https://iteg-management-system.vercel.app/login" element={<LoginPage />} />
           <Route path="/otp-verification" element={<OtpVerification />} />
           <Route path="/reset-password/:token" element={<ConfirmPassword />} />
           <Route path="/forget-password" element={<ForgetPassword />} />
