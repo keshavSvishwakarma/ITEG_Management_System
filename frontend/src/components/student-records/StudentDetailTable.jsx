@@ -2,18 +2,24 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../common-components/pagination/Pagination";
 import UserProfile from "../common-components/user-profile/UserProfile";
-import { useAdmitedStudentsQuery } from "../../redux/api/authApi";
+import {
+  // useAdmitedStudentsQuery,
+  // useGetAllStudentsByLevelQuery,
+  useGetLevelNumberQuery
+} from "../../redux/api/authApi";
 import CommonTable from "../common-components/table/CommonTable";
 import edit from "../../assets/icons/edit-fill-icon.png";
 import interview from "../../assets/icons/interview-icon.png";
 import CreateInterviewModal from "./CreateInterviewModal";
 
 const StudentDetailTable = () => {
-  const { data = [], isLoading } = useAdmitedStudentsQuery();
+  // const { data = [], isLoading, refetch } = useAdmitedStudentsQuery();
   const location = useLocation();
   const selectedLevel = location.state?.level || null;
+  console.log("🚀 ~ file: StudentDetailTable.jsx:10 ~ StudentDetailTable ~ selectedLevel:", selectedLevel);
+  const { data = [], isLoading, refetch } = useGetLevelNumberQuery(selectedLevel);
   const navigate = useNavigate();
-
+  console.log("🚀 ~ file: StudentDetailTable.jsx:11 ~ StudentDetailTable ~ data:", data);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
@@ -119,7 +125,7 @@ const StudentDetailTable = () => {
     <>
       <button
         onClick={() => {
-          setSelectedStudentId(student._id); // 👈 set ID here
+          setSelectedStudentId(student._id);
           setShowModal(true);
         }}
         className="px-3 py-1 rounded"
@@ -136,7 +142,6 @@ const StudentDetailTable = () => {
       </button>
     </>
   );
-
 
   return (
     <>
@@ -168,6 +173,7 @@ const StudentDetailTable = () => {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         studentId={selectedStudentId}
+        refetchStudents={refetch} // 🔁 passed here
       />
     </>
   );

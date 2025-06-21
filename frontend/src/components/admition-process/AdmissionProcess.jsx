@@ -10,14 +10,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import UserProfile from "../common-components/user-profile/UserProfile";
 
 const toTitleCase = (str) =>
-  str
-    ?.toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+  str?.toLowerCase().split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 
 const StudentList = () => {
-  const { data = [], isLoading, error } = useGetAllStudentsQuery();
+  const { data = [], isLoading, error, refetch } = useGetAllStudentsQuery();
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("Total Registration");
@@ -32,16 +28,22 @@ const StudentList = () => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const tab = searchParams.get("tab");
-    if (tab) setActiveTab(tab);
+    const tabFromURL = searchParams.get("tab");
+    const savedTab = localStorage.getItem("admissionActiveTab");
+
+    if (tabFromURL) {
+      setActiveTab(tabFromURL);
+      localStorage.setItem("admissionActiveTab", tabFromURL);
+    } else if (savedTab) {
+      setActiveTab(savedTab);
+    }
   }, [location.search]);
 
+
   const scheduleButton = (student) => {
-    const numberOfAttemed = student?.interviews.filter(
-      (item) => item.round === "First"
-    );
+    const numberOfAttempted = student?.interviews?.filter(item => item.round === "First") || [];
     setSelectedStudentId(student._id);
-    setAtemendNumber(numberOfAttemed.length);
+    setAtemendNumber(numberOfAttempted.length);
     setIsModalOpen(true);
   };
 
@@ -54,6 +56,50 @@ const StudentList = () => {
   const handleEditClick = (studentId) => {
     navigate(`/admission/edit/${studentId}`);
   };
+
+  const getLatestInterviewResult = (interviews = []) => {
+    if (!interviews.length) return null;
+    return [...interviews].sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.result;
+  };
+
+const matchTabCondition = (student) => {
+  const latestResult = getLatestInterviewResult(student.interviews);
+  const hasInterviews = student.interviews?.length > 0;
+  const firstRound = student.interviews?.filter((i) => i.round === "First");
+  const secondRound = student.interviews?.filter((i) => i.round === "Second");
+
+  switch (activeTab) {
+    case "Online Assessment":
+      return (
+        student.onlineTest?.result === "Pending" &&
+        (!hasInterviews || firstRound.length === 0)
+      );
+
+    case "Technical Round":
+      return (
+        firstRound.length > 0 &&
+        firstRound.some((i) => i.result === "Pending" || i.result === "Fail")
+      );
+
+    case "Final Round":
+      return (
+        firstRound.some((i) => i.result === "Pass") &&
+        !secondRound.some((i) => i.result === "Pass")
+      );
+
+    case "Selected":
+      return secondRound.some((i) => i.result === "Pass");
+
+    case "Rejected":
+      return (
+        latestResult === "Fail" ||
+        secondRound.some((i) => i.result === "Fail")
+      );
+
+    default:
+      return true;
+  }
+};
 
   const filtersConfig = [
     {
@@ -76,81 +122,19 @@ const StudentList = () => {
     },
   ];
 
-  const tabs = [
-    "Total Registration",
-    "Online Assessment",
-    "Technical Round",
-    "Final Round",
-    "Selected",
-    "Rejected",
-  ];
-
-  const getLatestInterviewResult = (interviews = []) => {
-    if (!interviews.length) return null;
-    return [...interviews].sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.result;
-  };
-
   const lowerSearchTerm = searchTerm.toLowerCase();
   const filteredData = data.filter((student) => {
-    const latestResult = getLatestInterviewResult(student.interviews || []);
-    const percentage = parseFloat(student.percentage);
-    const studentTrack = (student.track || "").toLowerCase();
-
-    if (
-      (activeTab === "Online Assessment" && student.onlineTest?.result !== "Pending") ||
-      (activeTab === "Selected" && latestResult !== "Pass") ||
-      (activeTab === "Final Round" && latestResult !== "Pass") ||
-      (activeTab === "Rejected" && latestResult !== "Fail")
-    ) {
-      return false;
-    }
-    if (
-      (activeTab === "Online Assessment" &&
-        (student.onlineTest?.result !== "Pending" || (student.interviews || []).length > 0)) ||
-      (activeTab === "Online Assessment" &&
-        (student.onlineTest?.result !== "Pending" || (student.interviews || []).length > 0)) ||
-
-      (activeTab === "Selected" &&
-        !student.interviews?.some(
-          (interview) => interview.round === "Second" && interview.result === "Pass"
-        )) ||
-
-      (activeTab === "Final Round" &&
-        !student.interviews?.some(
-          (interview) => interview.round === "First" && interview.result === "Pass"
-        )) ||
-
-      (activeTab === "Rejected" && latestResult !== "Fail") ||
-
-      (activeTab === "Technical Round" && (student.interviews || []).length === 0) ||
-      (activeTab === "Selected" && latestResult !== "Pass") ||
-      (activeTab === "Final Round" && latestResult !== "Pass") ||
-      (activeTab === "Rejected" && latestResult !== "Fail") ||
-      (activeTab === "Technical Round" && (student.interviews || []).length === 0) ||
-      (activeTab === "Rejected" &&
-        latestResult !== "Fail" &&
-        !student.interviews?.some(
-          (interview) => interview.rounddd === "Second" && interview.result === "Fail"
-        ))
-
-    ) {
-      return false;
-    }
-
-
     const searchableValues = Object.values(student)
       .map((val) => String(val ?? "").toLowerCase())
       .join(" ");
     if (!searchableValues.includes(lowerSearchTerm)) return false;
 
-    const matchTrack =
-      selectedTracks.length === 0 ||
-      selectedTracks.some((track) => track.toLowerCase() === studentTrack);
+    const track = (student.track || "").toLowerCase();
+    const latestResult = getLatestInterviewResult(student.interviews || []);
+    const percentage = parseFloat(student.percentage);
 
-    const matchResult =
-      selectedResults.length === 0 ||
-      selectedResults.some((result) => result.toLowerCase() === (latestResult?.toLowerCase() || ""));
-
+    const matchTrack = selectedTracks.length === 0 || selectedTracks.includes(toTitleCase(track));
+    const matchResult = selectedResults.length === 0 || selectedResults.includes(toTitleCase(latestResult || ""));
     const matchPercentage =
       selectedPercentages.length === 0 ||
       selectedPercentages.some((range) => {
@@ -158,20 +142,21 @@ const StudentList = () => {
         return percentage >= min && percentage <= max;
       });
 
-    return matchTrack && matchResult && matchPercentage;
+    return matchTrack && matchResult && matchPercentage && matchTabCondition(student);
   });
+
   const handleGetOnlineMarks = (onlineTest = {}) => {
     const result = onlineTest?.result;
+    const classes = "px-3 py-1 rounded-xl text-sm font-medium";
     switch (result) {
       case "Pass":
-        return <span className="bg-green-100 text-green-700 px-3 py-1 rounded-xl text-sm font-medium">Pass</span>;
+        return <span className={`bg-green-100 text-green-700 ${classes}`}>Pass</span>;
       case "Fail":
-        return <span className="bg-red-100 text-red-700 px-3 py-1 rounded-xl text-sm font-medium">Fail</span>;
+        return <span className={`bg-red-100 text-red-700 ${classes}`}>Fail</span>;
       default:
-        return <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-xl text-sm font-medium">{toTitleCase(result) || "Not Attempted"}</span>;
+        return <span className={`bg-gray-100 text-gray-700 ${classes}`}>{toTitleCase(result) || "Not Attempted"}</span>;
     }
   };
-
 
   const handleGetMarks = (interviews = []) => {
     const roundData = interviews?.filter((i) => i?.round === "First");
@@ -181,15 +166,27 @@ const StudentList = () => {
   const handleGetStatus = (interviews = []) => {
     const roundData = interviews?.filter((i) => i?.round === "First");
     const result = roundData?.[roundData.length - 1]?.result;
+    const classes = "px-3 py-1 rounded-xl text-sm font-medium";
     switch (result) {
       case "Pass":
-        return <span className="bg-green-100 text-green-700 px-3 py-1 rounded-xl text-sm font-medium">Pass</span>;
+        return <span className={`bg-green-100 text-green-700 ${classes}`}>Pass</span>;
       case "Fail":
-        return <span className="bg-red-100 text-red-700 px-3 py-1 rounded-xl text-sm font-medium">Fail</span>;
+        return <span className={`bg-red-100 text-red-700 ${classes}`}>Fail</span>;
       default:
-        return <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-xl text-sm font-medium">{toTitleCase(result) || "Not Attempted"}</span>;
+        return <span className={`bg-gray-100 text-gray-700 ${classes}`}>{toTitleCase(result) || "Not Attempted"}</span>;
     }
   };
+
+  const tabs = [
+    "Total Registration",
+    "Online Assessment",
+    "Technical Round",
+    "Final Round",
+    "Selected",
+    "Rejected",
+  ];
+
+  // Columns and Action Buttons by Tab
   let columns = [];
   let actionButton;
 
@@ -201,9 +198,6 @@ const StudentList = () => {
         { key: "studentMobile", label: "Mobile" },
         { key: "track", label: "Track", render: (row) => toTitleCase(row.track) },
         { key: "stream", label: "Status", render: (row) => handleGetOnlineMarks(row.onlineTest) },
-        // { key: "stream", label: "Status", render: (row) => handleGetStatus(row.interviews) },     
-        //    { key: "stream", label: "Marks", render: (row) => handleGetMarks(row.interviews) },
-        // { key: "stream", label: "Status", render: (row) => handleGetStatus(row.interviews) },
       ];
       actionButton = (row) => (
         <button onClick={() => scheduleButton(row)} className="bg-orange-500 text-white px-3 py-1 rounded">
@@ -211,6 +205,7 @@ const StudentList = () => {
         </button>
       );
       break;
+
     case "Technical Round":
       columns = [
         { key: "firstName", label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
@@ -218,10 +213,15 @@ const StudentList = () => {
         { key: "studentMobile", label: "Mobile" },
         { key: "track", label: "Track", render: (row) => toTitleCase(row.track) },
         { key: "course", label: "Course", render: (row) => toTitleCase(row.course) },
-        { key: "stream", label: "Status of Written", render: (row) => handleGetOnlineMarks(row.onlineTest) },
-        { key: "stream", label: "Marks of tech", render: (row) => handleGetMarks(row.interviews) },
+        { key: "onlineTestStatus", label: "Status of Written", render: (row) => handleGetOnlineMarks(row.onlineTest) },
+        { key: "techMarks", label: "Marks of Tech", render: (row) => handleGetMarks(row.interviews) },
+        { key: "techStatus", label: "Status of Tech", render: (row) => handleGetStatus(row.interviews) },
       ];
-      actionButton = (row) => handleGetStatus(row.interviews);
+      actionButton = (row) => (
+        <button onClick={() => scheduleButton(row)} className="bg-orange-500 text-white px-3 py-1 rounded">
+          Take interview
+        </button>
+      );
       break;
 
     case "Final Round":
@@ -246,7 +246,6 @@ const StudentList = () => {
       );
       break;
 
-
     case "Selected":
       columns = [
         { key: "firstName", label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
@@ -264,7 +263,6 @@ const StudentList = () => {
         </button>
       );
       break;
-
 
     case "Rejected":
       columns = [
@@ -302,10 +300,16 @@ const StudentList = () => {
       break;
   }
 
-
-
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Error fetching students.</p>;
+
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem("admissionActiveTab", tab);
+  };
+
+
 
   return (
     <>
@@ -327,9 +331,8 @@ const StudentList = () => {
           {tabs.map((tab) => (
             <p
               key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`cursor-pointer pb-2 border-b-2 ${activeTab === tab ? "border-orange-400 font-semibold" : "border-transparent"
-                }`}
+              onClick={() => handleTabClick(tab)}
+              className={`cursor-pointer pb-2 border-b-2 ${activeTab === tab ? "border-orange-400 font-semibold" : "border-gray-200"}`}
             >
               {tab}
             </p>
@@ -352,7 +355,9 @@ const StudentList = () => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           studentId={selectedStudentId}
-          attemed={atemendNumber}
+          attempted={atemendNumber}
+          refetch={refetch} // 🔄 GET call after POST
+
         />
       )}
     </>
@@ -360,4 +365,3 @@ const StudentList = () => {
 };
 
 export default StudentList;
-

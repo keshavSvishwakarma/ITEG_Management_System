@@ -1,280 +1,232 @@
-import { useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { FaCamera } from "react-icons/fa";
-import { Formik, Form } from "formik";
-import * as Yup from "yup";
 
-import UserProfile from "../common-components/user-profile/UserProfile";
-import TextInput from "../common-components/common-feild/TextInput";
-import SelectInput from "../common-components/common-feild/SelectInput";
-import RadioGroup from "../common-components/common-feild/RadioGroup";
-import CheckboxGroup from "../common-components/common-feild/CheckboxGroup";
-
-import { useUpdateStudentByIdMutation, } from "../../redux/api/authApi"; // Adjust path if needed
+import { useLocation, useParams, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import {
+  useUpdatePermissionMutation,
+  useUpdatePlacementMutation,
+} from "../../redux/api/authApi";
+import { toast } from "react-toastify";
+import imageCompression from "browser-image-compression";
 
 const StudentEditPage = () => {
-  const fileInputRef = useRef(null);
-  const [imageSrc, setImageSrc] = useState("https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg");
+  const { id } = useParams();
   const location = useLocation();
-  const studentData = location.state?.student || {};
+  const navigate = useNavigate();
+  const student = location.state?.student;
 
-  const [updateStudentById] = useUpdateStudentByIdMutation();
+  const [updatePermission] = useUpdatePermissionMutation();
+  const [updatePlacement] = useUpdatePlacementMutation();
 
-  const initialValues = {
-    firstName: studentData.name || "",
-    lastName: "",
-    contactNumber: studentData.mobile || "",
-    fatherName: studentData.fatherName || "",
-    gender: "",
-    track: studentData.course || "",
-    address: studentData.village || "",
-    twelfthSubject: "",
-    twelfthPercentage: "",
-    tenthPercentage: "",
-    passoutYear: "",
-    courseType: "Course",
-    itegLevels: [],
-    permission: false,
-    permissionReason: "",
-    permissionDate: "",
-    placed: false,
-    companyName: "",
-    placementDate: "",
-    imageSrc: imageSrc,
-  };
-
-  const validationSchema = Yup.object().shape({
-    firstName: Yup.string().required("First name is required"),
-    lastName: Yup.string().required("Last name is required"),
-    contactNumber: Yup.string()
-      .matches(/^\d{10}$/, "Must be a valid 10-digit number")
-      .required("Contact number is required"),
-    twelfthPercentage: Yup.number()
-      .typeError("Enter a valid percentage")
-      .min(0)
-      .max(100)
-      .required("12th percentage is required"),
-    tenthPercentage: Yup.number()
-      .typeError("Enter a valid percentage")
-      .min(0)
-      .max(100)
-      .required("10th percentage is required"),
-    passoutYear: Yup.string().required("Passout year is required"),
+  const [permissionData, setPermissionData] = useState({
+    imageURL: "",
+    remark: "",
+    approved_by: "admin",
   });
 
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
+  const [placementData, setPlacementData] = useState({
+    companyName: "",
+    salary: "",
+    location: "",
+    jobProfile: "",
+  });
 
-  const handleFileChange = (e, setFieldValue) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageSrc(reader.result);
-        setFieldValue("imageSrc", reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // Compress and convert to base64
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const handleSubmit = async (values) => {
-    const payload = {
-      id: studentData._id,
-      ...values,
+    const options = {
+      maxSizeMB: 0.3, // ~300 KB
+      maxWidthOrHeight: 600,
+      useWebWorker: true,
     };
 
     try {
-      const res = await updateStudentById({ data: payload }).unwrap();
-      console.log("Student updated successfully:", res);
-      // Optionally show success UI or redirect
+      const compressedFile = await imageCompression(file, options);
+      const base64 = await imageCompression.getDataUrlFromFile(compressedFile);
+      setPermissionData((prev) => ({ ...prev, imageURL: base64 }));
+    } catch (err) {
+      console.error("Compression Error:", err);
+      toast.error("Image compression failed.");
+    }
+  };
+
+  const handlePermissionSubmit = async () => {
+    try {
+      if (!permissionData.imageURL) {
+        toast.error("Please upload an image");
+        return;
+      }
+      await updatePermission({ id, data: permissionData }).unwrap();
+      toast.success("Permission updated successfully");
     } catch (error) {
-      console.error("Failed to update student:", error);
-      // Optionally show error UI
+      console.error("Permission Error:", error);
+      toast.error(error?.data?.message || "Failed to update permission");
+    }
+  };
+
+  const handlePlacementSubmit = async () => {
+    try {
+      await updatePlacement({ id, data: placementData }).unwrap();
+      toast.success("Placement updated successfully");
+    } catch (error) {
+      console.error("Placement Error:", error);
+      toast.error(error?.data?.message || "Failed to update placement");
     }
   };
 
   return (
-    <>
-      <UserProfile showBackButton heading="Student Profile" />
+    <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md mt-6">
+      <h2 className="text-2xl font-bold mb-4">
+        Edit Student: {student?.firstName} {student?.lastName}
+      </h2>
 
-      <div className="w-full min-h-screen mt-5 font-sans">
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
+      {/* Permission Details */}
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold mb-2">Permission Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1 font-medium">Upload Image (Base64)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="border p-2 w-full"
+            />
+            {permissionData.imageURL && (
+              <img
+                src={permissionData.imageURL}
+                alt="Preview"
+                className="mt-2 h-32 rounded border"
+              />
+            )}
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Remark</label>
+            <input
+              type="text"
+              value={permissionData.remark}
+              onChange={(e) =>
+                setPermissionData((prev) => ({
+                  ...prev,
+                  remark: e.target.value,
+                }))
+              }
+              className="border p-2 w-full"
+              placeholder="Enter remark"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Approved By</label>
+            <select
+              value={permissionData.approved_by}
+              onChange={(e) =>
+                setPermissionData((prev) => ({
+                  ...prev,
+                  approved_by: e.target.value,
+                }))
+              }
+              className="border p-2 w-full"
+            >
+              <option value="super admin">Super Admin</option>
+              <option value="admin">Admin</option>
+              <option value="faculty">Faculty</option>
+            </select>
+          </div>
+        </div>
+        <button
+          onClick={handlePermissionSubmit}
+          className="mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded"
         >
-          {({ setFieldValue, values }) => (
-            <Form className="space-y-6 rounded-lg">
-              {/* Profile Image Upload */}
-              <div className="flex items-center justify-between mt-4 flex-wrap gap-4">
-                <div
-                  className="relative w-28 h-28 rounded-full border-4 border-dotted border-orange-500 cursor-pointer flex items-center justify-center"
-                  onClick={handleImageClick}
-                >
-                  <img
-                    className="w-full h-full rounded-full object-cover p-1"
-                    src={imageSrc}
-                    alt="Profile"
-                  />
-                  <div className="absolute bottom-1 right-1 bg-orange-500 rounded-full p-1">
-                    <FaCamera className="text-white text-base" />
-                  </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, setFieldValue)}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition duration-300 text-sm font-medium"
-                >
-                  Save
-                </button>
-              </div>
-
-              {/* Personal Info */}
-              <div className="border-b border-gray-300 pb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Personal Information
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <TextInput label="First Name" name="firstName" placeholder="First Name" />
-                  <TextInput label="Last Name" name="lastName" placeholder="Last Name" />
-                  <TextInput label="Contact Number" name="contactNumber" placeholder="Contact Number" />
-                  <TextInput label="Father's Name" name="fatherName" placeholder="Father's Name" />
-                  <div>
-                    <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
-                      Gender
-                    </label>
-                    <SelectInput
-                      name="gender"
-                      options={[
-                        { value: "", label: "Gender" },
-                        { value: "male", label: "Male" },
-                        { value: "female", label: "Female" },
-                        { value: "other", label: "Other" },
-                      ]}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="track" className="block text-sm font-medium text-gray-700 mb-1">
-                      Track
-                    </label>
-                    <SelectInput
-                      name="track"
-                      options={[
-                        { value: "", label: "Select Track" },
-                        { value: "Harda", label: "Harda" },
-                        { value: "Khategaon", label: "Khategaon" },
-                      ]}
-                    />
-                  </div>
-                  <TextInput label="Address" name="address" placeholder="Enter your address" />
-                </div>
-              </div>
-
-              {/* Academic Info */}
-              <div className="border-b border-gray-300 pb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Academic Details
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <TextInput label="12th Subject" name="twelfthSubject" placeholder="12th Subject" />
-                  <TextInput label="12th Percentage" name="twelfthPercentage" placeholder="12th %" />
-                  <TextInput label="10th Percentage" name="tenthPercentage" placeholder="10th %" />
-                  <TextInput label="Passout Year" name="passoutYear" placeholder="dd/mm/yyyy" />
-                  <RadioGroup
-                    label=""
-                    name="courseType"
-                    options={[
-                      { label: "Course", value: "Course" },
-                      { label: "Diploma", value: "Diploma" },
-                    ]}
-                    containerClassName="flex items-center gap-4 mt-6"
-                    radioClassName="form-radio text-orange-500"
-                    labelClassName="text-gray-700 ml-2"
-                  />
-                </div>
-              </div>
-
-              {/* ITEG Levels */}
-              <div className="border-b border-gray-300 pb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Iteg Levels</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
-                  {["1A Level", "1B Level", "1C Level", "2A Level", "2B Level", "2C Level"].map(
-                    (level) => (
-                      <CheckboxGroup
-                        key={level}
-                        label=""
-                        name="itegLevels"
-                        options={[{ value: level, label: level }]}
-                        checkboxClassName="form-checkbox text-orange-500"
-                        labelClassName="text-gray-700 ml-2"
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-
-              {/* Permission Section */}
-              <div className="border-b border-gray-300 pb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Permission</h2>
-                <div className="flex justify-between items-center w-full mb-4">
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="permissionSwitch">
-                    Permission
-                  </label>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      id="permissionSwitch"
-                      name="permission"
-                      className="sr-only peer"
-                      onChange={(e) => setFieldValue("permission", e.target.checked)}
-                      checked={values.permission}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                  </label>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <TextInput label="" name="permissionReason" placeholder="Reasons" />
-                  <TextInput label="" name="permissionDate" placeholder="dd/mm/yyyy" type="text" />
-                </div>
-              </div>
-
-              {/* Placed Info */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Placed</h2>
-                <div className="flex justify-between items-center w-full mb-4">
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="placedSwitch">
-                    Placed
-                  </label>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      id="placedSwitch"
-                      name="placed"
-                      className="sr-only peer"
-                      onChange={(e) => setFieldValue("placed", e.target.checked)}
-                      checked={values.placed}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                  </label>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <TextInput label="Company Name" name="companyName" placeholder="Company Name" />
-                  <TextInput label="Date of Placement" name="placementDate" placeholder="dd/mm/yyyy" type="text" />
-                </div>
-              </div>
-            </Form>
-          )}
-        </Formik>
+          Update Permission
+        </button>
       </div>
-    </>
+
+      {/* Placement Info */}
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold mb-2">Placement Info</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1 font-medium">Company Name</label>
+            <input
+              type="text"
+              value={placementData.companyName}
+              onChange={(e) =>
+                setPlacementData((prev) => ({
+                  ...prev,
+                  companyName: e.target.value,
+                }))
+              }
+              className="border p-2 w-full"
+              placeholder="e.g. Infosys"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Job Profile</label>
+            <input
+              type="text"
+              value={placementData.jobProfile}
+              onChange={(e) =>
+                setPlacementData((prev) => ({
+                  ...prev,
+                  jobProfile: e.target.value,
+                }))
+              }
+              className="border p-2 w-full"
+              placeholder="e.g. Frontend Developer"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Salary</label>
+            <input
+              type="text"
+              value={placementData.salary}
+              onChange={(e) =>
+                setPlacementData((prev) => ({
+                  ...prev,
+                  salary: e.target.value,
+                }))
+              }
+              className="border p-2 w-full"
+              placeholder="e.g. 6 LPA"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Location</label>
+            <input
+              type="text"
+              value={placementData.location}
+              onChange={(e) =>
+                setPlacementData((prev) => ({
+                  ...prev,
+                  location: e.target.value,
+                }))
+              }
+              className="border p-2 w-full"
+              placeholder="e.g. Bangalore"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handlePlacementSubmit}
+          className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded"
+        >
+          Update Placement
+        </button>
+      </div>
+
+      <button
+        onClick={() => navigate(-1)}
+        className="mt-6 bg-gray-500 text-white py-2 px-6 rounded hover:bg-gray-600"
+      >
+        Go Back
+      </button>
+    </div>
   );
 };
 
