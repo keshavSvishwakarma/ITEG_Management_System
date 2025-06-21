@@ -19,14 +19,33 @@ const passport = require("./config/passport.js");
 const app = express();
 // cors for frontend and backend communication
 setupSwagger(app);
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_URL, // replace with your frontend URL
+  
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH","FETCH"],
+//     credentials: true, // only if you're using cookies or sessions
+//   })
+// );
+
+const allowedOrigins = process.env.FRONTEND_URL.split(",");
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // replace with your frontend URL
-  
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH","FETCH"],
-    credentials: true, // only if you're using cookies or sessions
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow non-browser tools like Postman
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error(`Not allowed by CORS: ${origin}`));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "FETCH"],
+    credentials: true,
   })
 );
+
+
 
 app.options("*", cors());
 app.use(express.json());
