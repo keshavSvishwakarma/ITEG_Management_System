@@ -23,7 +23,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL, // replace with your frontend URL
   
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH","FETCH"],
     credentials: true, // only if you're using cookies or sessions
   })
 );
