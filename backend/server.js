@@ -21,7 +21,11 @@ const app = express();
 setupSwagger(app);
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // replace with your frontend URL
+    // origin: https://iteg-management-system.vercel.app/, // replace with your frontend URL
+    origin: [
+    "https://iteg-management-system.vercel.app/",
+    "http://localhost:5173/api"
+  ],
     origin: '*', // or '*' to allow all
     // methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true, // only if you're using cookies or sessions
