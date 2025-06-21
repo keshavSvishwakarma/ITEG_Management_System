@@ -22,7 +22,7 @@ setupSwagger(app);
 app.use(
   cors({
     origin: process.env.FRONTEND_URL, // replace with your frontend URL
-    // origin: '*', // or '*' to allow all
+  
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true, // only if you're using cookies or sessions
   })
