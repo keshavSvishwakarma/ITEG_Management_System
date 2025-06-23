@@ -28,7 +28,7 @@ setupSwagger(app);
 //   })
 // );
 
-const allowedOrigins = process.env.FRONTEND_URL.split(",") || "http://iteg.ssism.org";
+const allowedOrigins = process.env.FRONTEND_URL.split(",") ;
 
 app.use(
   cors({
