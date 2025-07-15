@@ -273,122 +273,123 @@ const StudentList = () => {
   let actionButton;
 
   switch (activeTab) {
-    case "Online Assessment":
-      columns = [
-        { key: "firstName", label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
-        { key: "fatherName", label: "Father's Name", render: (row) => toTitleCase(row.fatherName) },
-        { key: "studentMobile", label: "Mobile" },
-        { key: "subject12", label: "12th Subject", render: (row) => toTitleCase(row.stream) },
-        { key: "course", label: "Course", render: (row) => toTitleCase(row.course) },
-        { key: "village", label: "Marks", render: (row) => toTitleCase(row.village) },
-        { key: "stream", label: "Status", render: (row) => handleGetOnlineMarks(row.onlineTest) },
-      ];
-      actionButton = (row) => (
-        <button
-          onClick={() => scheduleButton(row)}
-          className="bg-orange-500 text-md text-white px-3 py-1 rounded"
-        >
-          Take interview
-        </button>
-      );
-      break;
+  case "Online Assessment":
+    columns = [
+      { key: "firstName", label: "Full Name", width: "w-40", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
+      { key: "fatherName", label: "Father's Name", width: "w-40", render: (row) => toTitleCase(row.fatherName) },
+      { key: "studentMobile", label: "Mobile", width: "w-32" },
+      { key: "subject12", label: "12th Subject", width: "w-40", render: (row) => toTitleCase(row.stream) },
+      { key: "course", label: "Course", width: "w-32", render: (row) => toTitleCase(row.course) },
+      { key: "village", label: "Marks", width: "w-24", render: (row) => toTitleCase(row.village) },
+      { key: "stream", label: "Status", width: "w-32", render: (row) => handleGetOnlineMarks(row.onlineTest) },
+    ];
+    actionButton = (row) => (
+      <button
+        onClick={() => scheduleButton(row)}
+        className="bg-orange-500 text-md text-white px-3 py-1 rounded"
+      >
+        Take interview
+      </button>
+    );
+    break;
 
-    case "Technical Round":
-      columns = [
-        { key: "firstName", label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
-        { key: "fatherName", label: "Father's Name", render: (row) => toTitleCase(row.fatherName) },
-        { key: "studentMobile", label: "Mobile" },
-        { key: "course", label: "Course", render: (row) => toTitleCase(row.course) },
-        { key: "onlineTestStatus", label: "Status of Written", render: (row) => handleGetOnlineMarks(row.onlineTest) },
-        { key: "techMarks", label: "Marks of Tech", render: (row) => handleGetMarks(row.interviews) },
-        { key: "techStatus", label: "Status of Tech", render: (row) => handleGetStatus(row.interviews) },
-      ];
-      actionButton = (row) => (
-        <button
-          onClick={() => scheduleButton(row)}
-          className="bg-orange-500 text-md text-white px-3 py-1 rounded"
-        >
-          Take interview
-        </button>
-      );
-      break;
+  case "Technical Round":
+    columns = [
+      { key: "firstName", label: "Full Name", width: "w-40", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
+      { key: "fatherName", label: "Father's Name", width: "w-40", render: (row) => toTitleCase(row.fatherName) },
+      { key: "studentMobile", label: "Mobile", width: "w-32" },
+      { key: "course", label: "Course", width: "w-32", render: (row) => toTitleCase(row.course) },
+      { key: "onlineTestStatus", label: "Status of Written", width: "w-40", render: (row) => handleGetOnlineMarks(row.onlineTest) },
+      { key: "techMarks", label: "Marks of Tech", width: "w-32", render: (row) => handleGetMarks(row.interviews) },
+      { key: "techStatus", label: "Status of Tech", width: "w-32", render: (row) => handleGetStatus(row.interviews) },
+    ];
+    actionButton = (row) => (
+      <button
+        onClick={() => scheduleButton(row)}
+        className="bg-orange-500 text-md text-white px-3 py-1 rounded"
+      >
+        Take interview
+      </button>
+    );
+    break;
 
-    case "Final Round":
-      columns = [
-        { key: "firstName", label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
-        { key: "fatherName", label: "Father's Name", render: (row) => toTitleCase(row.fatherName) },
-        { key: "studentMobile", label: "Mobile" },
-        { key: "course", label: "Course", render: (row) => toTitleCase(row.course) },
-        { key: "onlineTestStatus", label: "Status of Written", render: (row) => handleGetOnlineMarks(row.onlineTest) },
-        { key: "techMarks", label: "Marks of Tech", render: (row) => handleGetMarks(row.interviews) },
-        { key: "stream", label: "Attempts of tech", render: (row) => handleGetMarks(row.interviews) },
-      ];
-      actionButton = (row) => (
-        <button
-          onClick={() => {
-            localStorage.setItem("studdedntDetails", JSON.stringify(row));
-            navigate(`/interview-detail/${row._id}?tab=${activeTab}`);
-          }}
-          className="bg-orange-500 text-md text-white px-3 py-1 rounded"
-        >
-          Interviews Detail
-        </button>
-      );
-      break;
+  case "Final Round":
+    columns = [
+      { key: "firstName", label: "Full Name", width: "w-40", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
+      { key: "fatherName", label: "Father's Name", width: "w-40", render: (row) => toTitleCase(row.fatherName) },
+      { key: "studentMobile", label: "Mobile", width: "w-32" },
+      { key: "course", label: "Course", width: "w-32", render: (row) => toTitleCase(row.course) },
+      { key: "onlineTestStatus", label: "Status of Written", width: "w-40", render: (row) => handleGetOnlineMarks(row.onlineTest) },
+      { key: "techMarks", label: "Marks of Tech", width: "w-32", render: (row) => handleGetMarks(row.interviews) },
+      { key: "stream", label: "Attempts of tech", width: "w-40", render: (row) => handleGetMarks(row.interviews) },
+    ];
+    actionButton = (row) => (
+      <button
+        onClick={() => {
+          localStorage.setItem("studdedntDetails", JSON.stringify(row));
+          navigate(`/interview-detail/${row._id}?tab=${activeTab}`);
+        }}
+        className="bg-orange-500 text-md text-white px-3 py-1 rounded"
+      >
+        Interviews Detail
+      </button>
+    );
+    break;
 
-    case "Results":
-      columns = [
-        { key: "firstName", label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
-        { key: "fatherName", label: "Father's Name", render: (row) => toTitleCase(row.fatherName) },
-        { key: "studentMobile", label: "Mobile" },
-        { key: "stream", label: "Subject", render: (row) => toTitleCase(row.stream) },
-        { key: "village", label: "Village", render: (row) => toTitleCase(row.village) },
-        { key: "track", label: "Track", render: (row) => toTitleCase(row.track) },
-      ];
-      actionButton = (row) => {
-        const secondRound = row.interviews?.filter((i) => i.round === "Second") || [];
-        const latestResult = getLatestInterviewResult(row.interviews);
-        const isSelected = secondRound.some((i) => i.result === "Pass");
-        const isRejected = latestResult === "Fail" || secondRound.some((i) => i.result === "Fail");
+  case "Results":
+    columns = [
+      { key: "firstName", label: "Full Name", width: "w-40", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
+      { key: "fatherName", label: "Father's Name", width: "w-40", render: (row) => toTitleCase(row.fatherName) },
+      { key: "studentMobile", label: "Mobile", width: "w-32" },
+      { key: "stream", label: "Subject", width: "w-32", render: (row) => toTitleCase(row.stream) },
+      { key: "village", label: "Village", width: "w-32", render: (row) => toTitleCase(row.village) },
+      { key: "track", label: "Track", width: "w-32", render: (row) => toTitleCase(row.track) },
+    ];
+    actionButton = (row) => {
+      const secondRound = row.interviews?.filter((i) => i.round === "Second") || [];
+      const latestResult = getLatestInterviewResult(row.interviews);
+      const isSelected = secondRound.some((i) => i.result === "Pass");
+      const isRejected = latestResult === "Fail" || secondRound.some((i) => i.result === "Fail");
 
-        if (isSelected) {
-          return (
-            <button
-              className="bg-[var(--success-light)] flex items-center gap-2 text-md text-[var(--success-dark)] px-3 py-1 rounded"
-              onClick={() => alert(`Selected: ${row.firstName}`)}
-            >
-              <FaCheckCircle className="text-lg" />
-              <span>Selected</span>
-            </button>
-          );
-        } else if (isRejected) {
-          return (
-            <button
-              className="bg-[var(--error-light)] flex items-center gap-2 text-md text-[var(--error-dark)] px-3 py-1 rounded"
-              onClick={() => alert(`Rejected: ${row.firstName}`)}
-            >
-              <AiFillStop className="text-lg" />
-              <span>Rejected</span>
-            </button>
-          );
-        } else {
-          return null;
-        }
-      };
-      break;
+      if (isSelected) {
+        return (
+          <button
+            className="bg-[var(--success-light)] flex items-center gap-2 text-md text-[var(--success-dark)] px-3 py-1 rounded"
+            onClick={() => alert(`Selected: ${row.firstName}`)}
+          >
+            <FaCheckCircle className="text-lg" />
+            <span>Selected</span>
+          </button>
+        );
+      } else if (isRejected) {
+        return (
+          <button
+            className="bg-[var(--error-light)] flex items-center gap-2 text-md text-[var(--error-dark)] px-3 py-1 rounded"
+            onClick={() => alert(`Rejected: ${row.firstName}`)}
+          >
+            <AiFillStop className="text-lg" />
+            <span>Rejected</span>
+          </button>
+        );
+      } else {
+        return null;
+      }
+    };
+    break;
 
-    default:
-      columns = [
-        { key: "firstName", label: "Full Name", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
-        { key: "fatherName", label: "Father's Name", render: (row) => toTitleCase(row.fatherName) },
-        { key: "studentMobile", label: "Mobile" },
-        { key: "subject12", label: "12th Subject", render: (row) => toTitleCase(row.stream) },
-        { key: "course", label: "Course", render: (row) => toTitleCase(row.course) },
-        { key: "village", label: "Village", render: (row) => toTitleCase(row.village) },
-        { key: "track", label: "Bus Route", render: (row) => toTitleCase(row.track) },
-      ];
-      break;
-  }
+  default:
+    columns = [
+      { key: "firstName", label: "Full Name", width: "w-40", render: (row) => toTitleCase(`${row.firstName} ${row.lastName}`) },
+      { key: "fatherName", label: "Father's Name", width: "w-40", render: (row) => toTitleCase(row.fatherName) },
+      { key: "studentMobile", label: "Mobile", width: "w-32" },
+      { key: "subject12", label: "12th Subject", width: "w-40", render: (row) => toTitleCase(row.stream) },
+      { key: "course", label: "Course", width: "w-32", render: (row) => toTitleCase(row.course) },
+      { key: "village", label: "Village", width: "w-32", render: (row) => toTitleCase(row.village) },
+      { key: "track", label: "Bus Route", width: "w-32", render: (row) => toTitleCase(row.track) },
+    ];
+    break;
+}
+
 
   {isLoading && (
     <div className="min-h-screen flex items-center justify-center bg-white">
