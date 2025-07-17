@@ -5,10 +5,7 @@ import { IoMenu } from "react-icons/io5";
 import { FaClipboardList } from "react-icons/fa6";
 import { GiGraduateCap } from "react-icons/gi";
 import { RiTv2Fill } from "react-icons/ri";
-import {
-  HiChevronUp,
-  HiChevronDown,
-} from "react-icons/hi";
+import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 
 const Sidebar = ({ children }) => {
   const [isOpen, setIsOpen] = useState(true);
@@ -20,18 +17,16 @@ const Sidebar = ({ children }) => {
   const menuItems = [
     {
       name: "Admissions",
-      icon: <RiTv2Fill />
-      ,
+      icon: <RiTv2Fill />,
       roles: ["superadmin", "admin"],
       subMenu: [
-        { name: "Dashboard", path: "/" },
-        { name: "Admission WorkFlow", path: "/admission" },
+        // { name: "Dashboard", path: "/" },
+        { name: "Admission WorkFlow", path: "/" },
       ],
     },
     {
       name: "Admitted",
-      icon: <FaClipboardList />
-      ,
+      icon: <FaClipboardList />,
       roles: ["superadmin", "admin", "faculty"],
       subMenu: [
         { name: "Student Progress", path: "/student-dashboard" },
@@ -91,21 +86,18 @@ const Sidebar = ({ children }) => {
                   <div key={idx}>
                     <div
                       onClick={() => toggleMenu(idx)}
-                      className={`flex  text-[1.1rem] items-center justify-between px-3 py-3 rounded cursor-pointer  font-semibold ${isActive
-                        ? "text-gray-700"
-                        : "hover:bg-gray-100 text-gray-700"
+                      className={`group flex text-[1.1rem] items-center justify-between px-3 py-3 rounded cursor-pointer font-semibold ${isActive ? "text-gray-700" : "hover:bg-gray-100 text-gray-700"
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span >{item.icon}</span>
+                        <span>{item.icon}</span>
                         <span>{item.name}</span>
                       </div>
-                      <div className="group">
+                      <div className="relative flex items-center">
                         <span className="hidden group-hover:block">
                           {isActive ? <HiChevronUp /> : <HiChevronDown />}
                         </span>
                       </div>
-
                     </div>
 
                     {/* submenus */}
@@ -119,9 +111,9 @@ const Sidebar = ({ children }) => {
                             <Link
                               key={i}
                               to={sub.path}
-                              className={`block rounded px-3 py-2 text-md ${active
-                                ? "bg-orange-50 text-orange-500 font-semibold border-l-4 border-orange-400"
-                                : "text-gray-600 hover:text-orange-500"
+                              className={`block rounded px-3 py-2 text-md transition-colors duration-200 border-l-4 ${active
+                                ? "bg-brandYellowOpacity text-brandYellow font-semibold border-brandYellow"
+                                : "text-gray-700 border-transparent hover:text-brandYellow"
                                 }`}
                             >
                               {sub.name}
@@ -144,13 +136,11 @@ const Sidebar = ({ children }) => {
       >
         {children}
       </main>
-
     </div>
   );
 };
 
 export default Sidebar;
-
 
 // /* eslint-disable react/prop-types */
 // import { useState } from "react";
@@ -225,7 +215,6 @@ export default Sidebar;
 //           </button>
 //         </div>
 
-
 //         {/* Sidebar links */}
 //         <nav className="flex flex-col gap-1 px-2 py-2 overflow-y-auto">
 //           {menuItems
@@ -289,4 +278,3 @@ export default Sidebar;
 // };
 
 // export default Sidebar;
-
