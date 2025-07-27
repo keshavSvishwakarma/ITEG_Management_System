@@ -21,7 +21,8 @@ const placedInfoSchema = new mongoose.Schema({
   salary: { type: Number, required: true },
   location: { type: String, required: true },
   jobProfile: { type: String, required: true },
-  // companyLogo:{ type: String, required: true }
+  // companyLogo:{ type: String, required: true },
+  jobType:{type:String}
 });
 
 const interviewRecordSchema = new mongoose.Schema({
@@ -65,22 +66,23 @@ const AdmittedStudentSchema = new mongoose.Schema({
   email: { type: String },
   studentMobile: { type: String, required: true },
   parentMobile: { type: String, required: true },
-  gender: { type: String, required: true },
-  dob: { type: Date, required: true },
-  aadharCard: { type: String, required: true, unique: true },
+  gender: { type: String },
+  dob: { type: Date },
+  aadharCard: { type: String, unique: true },
   address: { type: String, required: true },
-  track: { type: String, required: true },
+  track: { type: String},
   village: { type: String, required: true },
-  stream: { type: String, required: true },
+  stream: { type: String },
   course: { type: String, required: true },
-  category: { type: String, required: true },
-  subject12: { type: String, required: true },
-  year12: { type: String, required: true },
+  category: { type: String },
+  subject12: { type: String },
+  year12: { type: String },
   percent12: { type: String },
   percent10: { type: String },
   year: { type: String, required: true, default: "first" },
-
+  
   // 📚 Academic & Activity
+  currentLevel: { type: String, default: "1A" }, // e.g., "Level 1
   level: { type: [levelSchema], default: [] },
 
   techno: { type: String, default: "" },

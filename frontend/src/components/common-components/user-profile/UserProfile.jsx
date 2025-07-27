@@ -1,16 +1,18 @@
-/* eslint-disable react/prop-types */
 import { useState, useRef, useEffect } from "react";
 import { FiSettings, FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import profileImg from "../../../assets/images/profile-img.png";
-import backIcon from "../../../assets/icons/back-icon.png";
+import Loader from "../loader/Loader";
+// import backIcon from "../../../assets/icons/back-icon.png";
 import { useLogoutMutation } from "../../../redux/api/authApi";
 import { toast } from "react-toastify";
 import SettingsModal from "./SettingModal";
 
-const UserProfile = ({ heading, showBackButton = false, onBack }) => {
+// const UserProfile = ({ heading, showBackButton = false, onBack }) => {
+const UserProfile = () => {
   const [open, setOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -18,10 +20,11 @@ const UserProfile = ({ heading, showBackButton = false, onBack }) => {
   const [logout] = useLogoutMutation();
   const handleLogout = async () => {
     try {
+      setIsLoggingOut(true);
       const userId = user?.id || user?._id;
       console.log("🔑 Initiating logout for user:", userId);
       const res = await logout({ id: userId }).unwrap();
-      console.log("✅ Logout success:", res);
+      console.log("✅ Logout success:");
 
       localStorage.clear();
       toast.success(res.message);
@@ -29,6 +32,7 @@ const UserProfile = ({ heading, showBackButton = false, onBack }) => {
     } catch (err) {
       console.error("❌ Logout failed:", err?.data || err);
       toast.error(err?.data?.message || "Logout failed");
+      setIsLoggingOut(false);
     }
   };
 
@@ -44,11 +48,12 @@ const UserProfile = ({ heading, showBackButton = false, onBack }) => {
 
   return (
     <div className="relative w-full p-2 mb-2">
-      <div className="absolute right-0 top-0 border-2 rounded-full" ref={dropdownRef}>
+      {isLoggingOut && <Loader />}
+      <div className="relative" ref={dropdownRef}>
         <img
           src={user?.avatar || profileImg}
           alt="User avatar"
-          className="w-12 h-12 rounded-full cursor-pointer"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full cursor-pointer object-cover border"
           onClick={() => setOpen((prev) => !prev)}
         />
         {open && (
@@ -70,17 +75,27 @@ const UserProfile = ({ heading, showBackButton = false, onBack }) => {
             </button>
             <button
               onClick={handleLogout}
+              disabled={isLoggingOut}
               className="flex items-center w-full px-4 py-3 hover:bg-gray-100 text-sm"
             >
-              <FiLogOut className="mr-2" />
-              Logout
+              {isLoggingOut ? (
+                <>
+                  <FiLogOut className="mr-2" />
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <FiLogOut className="mr-2" />
+                  Logout
+                </>
+              )}
             </button>
           </div>
         )}
       </div>
 
       {/* Heading & Back Button */}
-      <div className="pr-16">
+      {/* <div className="pr-16">
         <div className="flex items-start gap-2 flex-wrap">
           {showBackButton && (
             <button onClick={onBack || (() => navigate(-1))}>
@@ -89,7 +104,7 @@ const UserProfile = ({ heading, showBackButton = false, onBack }) => {
           )}
           <h1 className="text-xl sm:text-2xl font-bold break-words">{heading}</h1>
         </div>
-      </div>
+      </div> */}
 
       {/* Settings Modal */}
       {isSettingsOpen && (

@@ -5,7 +5,7 @@ import { logout, setCredentials } from "../auth/authSlice";
 
 const secretKey = "ITEG@123";
 
-// //  Decrypt from localStorage
+//  Decrypt from localStorage
 // const decrypt = (encrypted) => {
 //   try {
 //     const bytes = CryptoJS.AES.decrypt(encrypted, secretKey);
@@ -15,14 +15,14 @@ const secretKey = "ITEG@123";
 //     return null;
 //   }
 // };
-
 const decrypt = (encrypted) => {
   if (!encrypted) return null;
 
   try {
+    if (!encrypted || typeof encrypted !== "string") return null; // ✅ Prevent decryption of null or invalid input
     const bytes = CryptoJS.AES.decrypt(encrypted, secretKey);
     const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-    return decrypted || null;
+    return decrypted || null; // If decryption fails silently, still return null
   } catch (err) {
     console.error("Decryption failed:", err);
     return null;
@@ -117,6 +117,7 @@ const baseQueryWithAutoRefresh = async (args, api, extraOptions) => {
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: baseQueryWithAutoRefresh,
+  tagTypes: ['Student'],
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (credentials) => ({
@@ -311,6 +312,9 @@ export const authApi = createApi({
         url: `${import.meta.env.VITE_GET_ADMITTED_STUDENTS_BY_ID}${id}`,
         method: "GET",
       }),
+      providesTags: (result, error, id) => [
+        { type: 'Student', id }
+      ],
     }),
 
     getPermissionStudent: builder.query({
@@ -335,6 +339,29 @@ export const authApi = createApi({
         body: data,
       }),
     }),
+    updateTechnology: builder.mutation({
+      query: ({ id, techno }) => {
+        const fullUrl = `${import.meta.env.VITE_UPDATE_TECHNOLOGY}${id}`;
+        return {
+          url: fullUrl,
+          method: "PATCH",
+          body: { techno },
+        };
+      },
+    }),
+
+    updateStudentImage: builder.mutation({
+      query: ({ id, image }) => ({
+        url: `/admitted/students/update/${id}`,
+        method: "PATCH",
+        body: { image },
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Student', id }
+      ],
+    }),
+
+
 
 
 
@@ -365,6 +392,20 @@ export const authApi = createApi({
       }),
     }),
 
+    getInterviewAttemptCount: builder.query({
+      query: (studentId) => ({
+        url: `${import.meta.env.VITE_GET_INTERVIEW_ATTEMPT}${studentId}`,
+        method: "GET",
+      }),
+    }),
+
+    // Get student level interviews for history page
+    getStudentLevelInterviews: builder.query({
+      query: (studentId) => ({
+        url: `${import.meta.env.VITE_GET_LEVEL_INTERVIEW_BY_ID}${studentId}`,
+        method: "GET",
+      }),
+    }),
 
 
   }),
@@ -395,6 +436,10 @@ export const {
   useGetReadyStudentsForPlacementQuery,
   useAddPlacementInterviewRecordMutation,
   useUpdatePlacedInfoMutation,
+  useUpdateTechnologyMutation,
+  useUpdateStudentImageMutation,
   useLogoutMutation,
-  useGetAllStudentsByLevelQuery
+  useGetAllStudentsByLevelQuery,
+  useGetInterviewAttemptCountQuery,
+  useGetStudentLevelInterviewsQuery
 } = authApi;

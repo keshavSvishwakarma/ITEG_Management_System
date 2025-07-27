@@ -4,13 +4,14 @@ import {
     useGetInterviewDetailByIdQuery,
     useInterviewCreateMutation,
 } from "../../redux/api/authApi";
-import UserProfile from "../common-components/user-profile/UserProfile";
 import { useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import TextInput from "../common-components/common-feild/TextInput";
 import SelectInput from "../common-components/common-feild/SelectInput";
 import { toast } from "react-toastify";
+import Loader from "../common-components/loader/Loader";
+import { HiArrowNarrowLeft } from "react-icons/hi";
 
 const AdmissionInterviewDetails = () => {
     const { id } = useParams();
@@ -39,22 +40,40 @@ const AdmissionInterviewDetails = () => {
         }
     };
 
-    if (isLoading) return <p className="text-center text-gray-600">Loading interview details...</p>;
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <Loader />
+            </div>
+        );
+    }
+    
     if (error) return <p className="text-center text-red-600">Error loading interview details.</p>;
 
     return (
         <>
-            <UserProfile showBackButton heading="Interview Detail Page" />
 
             <div className="p-6 bg-white rounded-xl shadow-md ">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-semibold text-gray-800">Student Interview Details</h2>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="px-5 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                <div className="flex justify-between items-center mb-6">
+                {/* 👈 BACK BUTTON ADDED JUST LIKE OTHER PAGE */}
+                    <div className="flex items-center gap-3">
+                <button
+                    type="button"
+                    onClick={() => window.history.back()}
+                    className="text-2xl text-gray-800 hover:text-gray-900"
+                >
+                    <HiArrowNarrowLeft />
+                </button>
+            <h2 className="text-2xl font-semibold text-gray-800">Student Interview Details</h2>
+                    </div>
+
+             {/* ➕ ADD INTERVIEW BUTTON */}
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="px-5 py-2 bg-brandYellow text-white rounded-lg hover:bg-orange-600 transition"
                     >
-                        + Add Interview
-                    </button>
+                  + Add Interview
+                </button>
                 </div>
 
                 <div className="pt-4 space-y-2 text-gray-700 text-sm">
@@ -144,7 +163,7 @@ const AdmissionInterviewDetails = () => {
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="px-5 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition disabled:opacity-50"
+                                            className="px-5 py-2 bg-brandYellow text-white rounded-md hover:bg-orange-600 transition disabled:opacity-50"
                                         >
                                             {isSubmitting ? "Submitting..." : "Submit"}
                                         </button>
@@ -173,4 +192,7 @@ const Detail = ({ label, value }) => (
 );
 
 export default AdmissionInterviewDetails;
+
+
+
 

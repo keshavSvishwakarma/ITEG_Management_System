@@ -19,9 +19,9 @@ exports.addAdmission = async (req, res) => {
     // 1) Check required fields
     const requiredFields = [
       'prkey','firstName','lastName','fatherName',
-      'studentMobile','parentMobile','gender','dob',
-      'aadharCard','address','village','track','stream','course',
-      'category','subject12','year12','percent10','percent12'
+      'studentMobile','gender',
+      'address','village','stream','course',
+      'category','percent10'
     ];
     for (let field of requiredFields) {
       if (!payload[field]) {
@@ -30,19 +30,19 @@ exports.addAdmission = async (req, res) => {
     }
 
     // 2) Validate date format
-    if (isNaN(Date.parse(payload.dob))) {
-      return res.status(400).json({ message: 'Invalid date format' });
-    }
+    // if (isNaN(Date.parse(payload.dob))) {
+    //   return res.status(400).json({ message: 'Invalid date format' });
+    // }
 
     // 3) Validate mobile & aadhar format
     const mobileRegex = /^\d{10}$/;
     if (!mobileRegex.test(payload.studentMobile) || !mobileRegex.test(payload.parentMobile)) {
       return res.status(400).json({ message: 'Invalid mobile number format' });
     }
-    const aadharRegex = /^\d{12}$/;
-    if (!aadharRegex.test(payload.aadharCard)) {
-      return res.status(400).json({ message: 'Invalid aadhaar format' });
-    }
+    // const aadharRegex = /^\d{12}$/;
+    // if (!aadharRegex.test(payload.aadharCard)) {
+    //   return res.status(400).json({ message: 'Invalid aadhaar format' });
+    // }
 
     // 4) Duplicate check
     const existingStudent = await AdmissionProcess.findOne({ prkey: payload.prkey });
@@ -62,6 +62,50 @@ exports.addAdmission = async (req, res) => {
   }
 };
 
+exports.updateAdmission = async (req, res) => {
+  try {
+    const payload = req.body;
+
+    // 1) Check required fields
+    const requiredFields = [
+      'prkey','firstName','lastName','fatherName',
+      'studentMobile','gender',
+      'address','village','stream','course',
+      'category','percent10', 'dob'
+    ];
+    console.log('%c [ requiredFields ]-71', 'font-size:13px; background:pink; color:#bf2c9f;', requiredFields)
+    for (let field of requiredFields) {
+      if (!payload[field]) {
+        return res.status(400).json({ message: `Missing field: ${field}` });
+      }
+    }
+
+    // 2) Validate mobile format
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(payload.studentMobile) || !mobileRegex.test(payload.parentMobile)) {
+      return res.status(400).json({ message: 'Invalid mobile number format' });
+    }
+
+    // 3) Find and update existing record
+    const existingStudent = await AdmissionProcess.findOne({ prkey: payload.prkey });
+    if (!existingStudent) {
+      return res.status(404).json({ message: 'Student not found with provided PRKEY' });
+    }
+    console.log('%c [ existingStudent ]-91', 'font-size:13px; background:pink; color:#bf2c9f;', existingStudent)
+
+    existingStudent.set(payload); // update fields
+    await existingStudent.save();
+
+    console.log("✅ Student admission record updated");
+    return res.status(200).json({ message: 'Student admission updated', data: existingStudent });
+
+  } catch (error) {
+    console.log('%c [ error ]-101', 'font-size:13px; background:pink; color:#bf2c9f;', error)
+    return res.status(500).json({ message: 'Error updating admission', error: error.message });
+  }
+};
+
+
 
 exports.updateAdmissionFlag = async (req, res, next) => {
   try {
@@ -74,8 +118,8 @@ exports.updateAdmissionFlag = async (req, res, next) => {
     }
     // Find the student by prkey and update the admissionStatus
     const updatedStudent = await AdmissionProcess.findOneAndUpdate(
-      { prkey},
-      { admissionStatus },
+  { prkey: prkey },                    
+  { $set: { admissionStatus: admissionStatus } },
       { new: true }
     );
     // console.log(updatedStudent);
@@ -86,17 +130,17 @@ exports.updateAdmissionFlag = async (req, res, next) => {
         .status(404)
         .json({ message: "Student not found with the provided prkey" });
     }
-         req.updatedStudent = updatedStudent;
+    req.updatedStudent = updatedStudent;
 
 
          // // ✅ Send plain text email if admission confirmed
-         if (admissionStatus === true && updatedStudent.email) {
-          await sendEmail({
-            to: updatedStudent.email,
-            subject: 'Admission Confirmed',
-            text: `Hi ${updatedStudent.firstName},\n\nYour admission has been successfully confirmed.\n\nRegards,\nAdmission Office`,
-          });
-         }
+    if (admissionStatus === true && updatedStudent.email) {
+      await sendEmail({
+        to: updatedStudent.email,
+        subject: 'Admission Confirmed',
+        text: `Hi ${updatedStudent.firstName},\n\nYour admission has been successfully confirmed.\n\nRegards,\nAdmission Office`,
+      });
+    }
     // Now move to next controller
     next();
     // Call the next middleware or route handler
@@ -179,11 +223,26 @@ exports.sendInterviewFlagToCentral = async (req, res) => {
 
 };
 
-
 exports.createInterview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { round,communication,confidence,goal,subjectKnowlage,technical,sincerity,  maths,reasoning, marks, remark, date, result } = req.body;
+    const {
+      round,
+      communication,
+      confidence,
+      goal,
+      subjectKnowlage,
+      technical,
+      sincerity,
+      maths,
+      reasoning,
+      marks,
+      assignmentMarks,
+      remark,
+      date,
+      result,
+      created_by
+    } = req.body;
 
     const student = await AdmissionProcess.findById(id);
     if (!student) {
@@ -192,18 +251,15 @@ exports.createInterview = async (req, res) => {
 
     const interviews = student.interviews || [];
 
-    // Round Order (you can add more later)
     const roundOrder = ["First", "Second"];
-
     const requestedRoundIndex = roundOrder.indexOf(round);
     if (requestedRoundIndex === -1) {
       return res.status(400).json({ success: false, message: "Invalid round name" });
     }
 
-    // Find all interviews of current requested round
     const currentRoundAttempts = interviews.filter(i => i.round === round);
 
-    // Find highest round passed
+    // Check highest passed round
     let lastPassedRoundIndex = -1;
     for (let i = 0; i < roundOrder.length; i++) {
       const passed = interviews.some(interview => interview.round === roundOrder[i] && interview.result === "Pass");
@@ -214,7 +270,7 @@ exports.createInterview = async (req, res) => {
       }
     }
 
-    // 🚫 If trying to attempt a new round without passing previous one
+    // If previous round not passed
     if (requestedRoundIndex > lastPassedRoundIndex + 1) {
       return res.status(400).json({
         success: false,
@@ -222,7 +278,7 @@ exports.createInterview = async (req, res) => {
       });
     }
 
-    // 🚫 If 4 attempts already done without passing, student is rejected
+    // Rejected after 4 failed attempts
     if (currentRoundAttempts.length >= 4 && !currentRoundAttempts.some(i => i.result === "Pass")) {
       return res.status(400).json({
         success: false,
@@ -230,7 +286,7 @@ exports.createInterview = async (req, res) => {
       });
     }
 
-    // 🚫 If already passed the current round
+    // Already passed this round
     if (currentRoundAttempts.some(i => i.result === "Pass")) {
       return res.status(400).json({
         success: false,
@@ -238,22 +294,22 @@ exports.createInterview = async (req, res) => {
       });
     }
 
-
     const newInterview = {
       round: round || "First",
-      communication:communication || 0,
-      confidence:confidence || 0,
-      goal:goal || 0,
-      subjectKnowlage:subjectKnowlage|| 0,
-      technical:technical || 0,
-      sincerity:sincerity || 0,
-      maths:maths || 0,
-      reasoning:reasoning || 0,
-      attemptNo: currentRoundAttempts.length + 1, // Auto-increment attemptNo
+      attemptNo: currentRoundAttempts.length + 1,
+      communication: communication || "",
+      confidence: confidence || "",
+      goal: goal || "",
+      subjectKnowlage: subjectKnowlage || "",
+      sincerity: sincerity || "",
+      technical: technical || 0,
+      maths: maths || 0,
+      reasoning: reasoning || 0,
       marks: marks || 0,
+      assignmentMarks: assignmentMarks || "",
       remark: remark || "",
       date: date || new Date(),
-      // created_by:Faculty||Faculty,
+      created_by: created_by || "Unknown",
       result: result || "Pending",
     };
 
@@ -270,8 +326,6 @@ exports.createInterview = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error", error });
   }
 };
-
-
 
 exports.getInterviewsByStudentId = async (req, res) => {
   try {
