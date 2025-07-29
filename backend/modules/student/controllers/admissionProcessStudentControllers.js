@@ -62,6 +62,50 @@ exports.addAdmission = async (req, res) => {
   }
 };
 
+exports.updateAdmission = async (req, res) => {
+  try {
+    const payload = req.body;
+
+    // 1) Check required fields
+    const requiredFields = [
+      'prkey','firstName','lastName','fatherName',
+      'studentMobile','gender',
+      'address','village','stream','course',
+      'category','percent10', 'dob'
+    ];
+    console.log('%c [ requiredFields ]-71', 'font-size:13px; background:pink; color:#bf2c9f;', requiredFields)
+    for (let field of requiredFields) {
+      if (!payload[field]) {
+        return res.status(400).json({ message: `Missing field: ${field}` });
+      }
+    }
+
+    // 2) Validate mobile format
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(payload.studentMobile) || !mobileRegex.test(payload.parentMobile)) {
+      return res.status(400).json({ message: 'Invalid mobile number format' });
+    }
+
+    // 3) Find and update existing record
+    const existingStudent = await AdmissionProcess.findOne({ prkey: payload.prkey });
+    if (!existingStudent) {
+      return res.status(404).json({ message: 'Student not found with provided PRKEY' });
+    }
+    console.log('%c [ existingStudent ]-91', 'font-size:13px; background:pink; color:#bf2c9f;', existingStudent)
+
+    existingStudent.set(payload); // update fields
+    await existingStudent.save();
+
+    console.log("✅ Student admission record updated");
+    return res.status(200).json({ message: 'Student admission updated', data: existingStudent });
+
+  } catch (error) {
+    console.log('%c [ error ]-101', 'font-size:13px; background:pink; color:#bf2c9f;', error)
+    return res.status(500).json({ message: 'Error updating admission', error: error.message });
+  }
+};
+
+
 
 exports.updateAdmissionFlag = async (req, res, next) => {
   try {
@@ -74,8 +118,8 @@ exports.updateAdmissionFlag = async (req, res, next) => {
     }
     // Find the student by prkey and update the admissionStatus
     const updatedStudent = await AdmissionProcess.findOneAndUpdate(
-      { prkey},
-      { admissionStatus },
+  { prkey: prkey },                    
+  { $set: { admissionStatus: admissionStatus } },
       { new: true }
     );
     // console.log(updatedStudent);
@@ -86,17 +130,17 @@ exports.updateAdmissionFlag = async (req, res, next) => {
         .status(404)
         .json({ message: "Student not found with the provided prkey" });
     }
-         req.updatedStudent = updatedStudent;
+    req.updatedStudent = updatedStudent;
 
 
          // // ✅ Send plain text email if admission confirmed
-         if (admissionStatus === true && updatedStudent.email) {
-          await sendEmail({
-            to: updatedStudent.email,
-            subject: 'Admission Confirmed',
-            text: `Hi ${updatedStudent.firstName},\n\nYour admission has been successfully confirmed.\n\nRegards,\nAdmission Office`,
-          });
-         }
+    if (admissionStatus === true && updatedStudent.email) {
+      await sendEmail({
+        to: updatedStudent.email,
+        subject: 'Admission Confirmed',
+        text: `Hi ${updatedStudent.firstName},\n\nYour admission has been successfully confirmed.\n\nRegards,\nAdmission Office`,
+      });
+    }
     // Now move to next controller
     next();
     // Call the next middleware or route handler
@@ -262,7 +306,7 @@ exports.createInterview = async (req, res) => {
       maths: maths || 0,
       reasoning: reasoning || 0,
       marks: marks || 0,
-      assignmentMarks: assignmentMarks || 0,
+      assignmentMarks: assignmentMarks || "",
       remark: remark || "",
       date: date || new Date(),
       created_by: created_by || "Unknown",

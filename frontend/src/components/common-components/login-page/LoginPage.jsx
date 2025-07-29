@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import CryptoJS from "crypto-js";
 import { useLoginMutation } from "../../../redux/api/authApi";
+import Loader from "../loader/Loader";
 
 import ReusableForm from "../../../ReusableForm";
 import { loginValidationSchema } from "../../../validationSchema";
@@ -65,6 +66,7 @@ const LoginPage = () => {
         backgroundSize: "cover",
       }}
     >
+      {isLoading && <Loader />}
       <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
         <ReusableForm
           initialValues={initialValues}
@@ -98,7 +100,7 @@ const LoginPage = () => {
 
               <button
                 type="submit"
-                className="w-full bg-brandYellow text-white py-3 rounded-full mt-4 hover:bg-orange-600 transition"
+                className="w-full bg-brandYellow text-white py-3 rounded-full mt-4 hover:bg-orange-600 transition relative"
                 disabled={isLoading}
               >
                 {isLoading ? "Logging in..." : "Sign in"}
@@ -131,12 +133,12 @@ const LoginPage = () => {
               </div> */}
 
               <div className="flex flex-col items-center space-y-4 px-5">
-                {/* Google Login Button (Disabled for now) */}
+                {/* Google Login Button */}
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
-                  className="flex w-full justify-center items-center space-x-3 bg-white shadow-md rounded-xl py-2.5 hover:shadow-lg transition border border-gray-300 opacity-50 cursor-not-allowed"
                   disabled
+                  className="flex w-full justify-center items-center space-x-3 bg-gray-100 shadow-md rounded-xl py-2.5 hover:shadow-lg transition border border-gray-300"
                 >
                   <img className="h-5" src={googleLogo} alt="Google" />
                   <span className="text-sm font-medium text-gray-800">
