@@ -21,6 +21,10 @@ const placedInfoSchema = new mongoose.Schema({
   salary: { type: Number, required: true },
   location: { type: String, required: true },
   jobProfile: { type: String, required: true },
+  hrEmail: { type: String, required: true },
+  contactNumber: { type: String, required: true },
+  position: { type: String, required: true },
+  technology: { type: String, required: true },
   // companyLogo:{ type: String, required: true },
   jobType:{type:String}
 });
@@ -35,7 +39,12 @@ const interviewRecordSchema = new mongoose.Schema({
     default: 'Pending'
   },
   location: { type: String, required: true },
-  jobProfile: { type: String, required: true }
+  jobProfile: { type: String, required: true },
+  hrEmail: { type: String, required: true },
+  contactNumber: { type: String, required: true },
+  position: { type: String, required: true },
+  technology: { type: String, required: true },
+  jobType: { type: String }
 });
 
 const permissionSchema = new mongoose.Schema({

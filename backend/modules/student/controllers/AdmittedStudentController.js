@@ -369,8 +369,24 @@ exports.updatePlacementInfo = async (req, res) => {
   try {
     const { id } = req.params;
     const student = await AdmittedStudent.findById(id);
-    const { companyName, salary, location, jobProfile } = req.body;
-    student.placedInfo = { companyName, salary, location, jobProfile };
+    
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const { companyName, salary, location, jobProfile, hrEmail, contactNumber, position, technology, jobType } = req.body;
+    
+    student.placedInfo = { 
+      companyName, 
+      salary, 
+      location, 
+      jobProfile, 
+      hrEmail, 
+      contactNumber, 
+      position, 
+      technology,
+      jobType 
+    };
 
     await student.save();
     return res.status(200).json({
