@@ -189,17 +189,33 @@ const PlacementReadyStudents = () => {
       },
     },
     {
-      key: "action",
+      key: "addInterview",
       label: "Action",
       render: (row) => (
         <button
           onClick={(e) => {
             e.stopPropagation();
-            console.log('Create post for student:', row._id);
+            setSelectedStudent(row);
+            setIsModalOpen(true);
           }}
           className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#FED680] active:bg-[#B66816] transition relative"
         >
-          Create Post
+          + Add Interview
+        </button>
+      ),
+    },
+    {
+      key: "getPlaced",
+      label: "Action",
+      render: (row) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('Get placed for student:', row._id);
+          }}
+          className="bg-green-500 text-md text-white px-3 py-1 rounded-md hover:bg-green-600 transition relative"
+        >
+          Get Placed
         </button>
       ),
     },
@@ -327,7 +343,7 @@ const PlacementReadyStudents = () => {
   }, []);
 
   const handleRowClick = (student) => {
-    if (activeTab === "Ongoing Interviews") {
+    if (activeTab === "Ongoing Interviews" || activeTab === "Selected Student") {
       navigate(`/interview-history/${student._id}`);
     }
   };
@@ -388,7 +404,7 @@ const PlacementReadyStudents = () => {
           pagination={true}
           rowsPerPage={rowsPerPage}
           searchTerm={searchTerm}
-          actionButton={activeTab !== "Selected Student" && activeTab !== "Placed Student" ? (student) => (
+          actionButton={activeTab === "Qualified Students" || activeTab === "Ongoing Interviews" ? (student) => (
             <button
               onClick={(e) => {
                 e.stopPropagation();
