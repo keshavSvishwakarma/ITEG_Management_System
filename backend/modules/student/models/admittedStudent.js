@@ -38,9 +38,12 @@ const interviewRoundSchema = new mongoose.Schema({
 });
 
 const interviewRecord = new mongoose.Schema({
-  companyName: { type: String, required: true },
+  companyRef: {type: mongoose.Schema.Types.ObjectId,
+    ref:"Company",
+     required: true
+  },
   jobProfile: { type: String, required: true },
-  location: { type: String },
+  
   status: {
     type: String,
     enum: ['Scheduled', 'Rescheduled', 'Ongoing', 'Selected', 'RejectedByStudent', 'RejectedByCompany'],
@@ -124,6 +127,12 @@ const AdmittedStudentSchema = new mongoose.Schema({
     default: 'Not Ready'
   },
   resumeURL: { type: String, default: "" },
+
+  // 📄 Placement Documents (after placement)
+  offerLetter: { type: String, default: "" }, // Base64 image/PDF
+  commitmentApplication: { type: String, default: "" }, // Base64 image
+  documentsUploadedBy: { type: String, default: "" },
+  documentsUploadedAt: { type: Date }
 
 }, { timestamps: true });
 
