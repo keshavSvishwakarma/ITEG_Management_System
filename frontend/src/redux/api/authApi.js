@@ -35,7 +35,7 @@ const encrypt = (data) => CryptoJS.AES.encrypt(data, secretKey).toString();
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   credentials: "include",
-  prepareHeaders: (headers) => {
+  prepareHeaders: (headers, { endpoint }) => {
     const encryptedToken = localStorage.getItem("token");
     const token = decrypt(encryptedToken);
     if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -43,8 +43,23 @@ const rawBaseQuery = fetchBaseQuery({
   },
 });
 
+// Special base query for external APIs (like attendance)
+const externalBaseQuery = fetchBaseQuery({
+  prepareHeaders: (headers) => {
+    return headers;
+  },
+});
+
 //  Auto-refresh logic
 const baseQueryWithAutoRefresh = async (args, api, extraOptions) => {
+  // Check if this is an external API call (uses full URL)
+  const isExternalApi = typeof args === 'object' && args.url && args.url.startsWith('http');
+  
+  if (isExternalApi) {
+    // For external APIs, use direct fetch without auth logic
+    return await externalBaseQuery(args, api, extraOptions);
+  }
+
   let result = await rawBaseQuery(args, api, extraOptions);
 
   // Handle server errors (5xx)
@@ -100,7 +115,7 @@ const baseQueryWithAutoRefresh = async (args, api, extraOptions) => {
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: baseQueryWithAutoRefresh,
-  tagTypes: ['Student', 'PlacementStudent'],
+  tagTypes: ['Student', 'PlacementStudent', 'Attendance'],
   // Global configuration for better caching
   keepUnusedDataFor: 300, // 5 minutes default cache
   refetchOnMountOrArgChange: 30, // Only refetch if data is older than 30 seconds
@@ -529,6 +544,31 @@ export const authApi = createApi({
       invalidatesTags: ['PlacementStudent'],
     }),
 
+    // Get student attendance
+    getStudentAttendance: builder.query({
+      query: ({ studentId, date, month, session }) => {
+        const params = new URLSearchParams();
+        if (date) params.append('date', date);
+        if (month) params.append('month', month);
+        if (session) params.append('session', session);
+        
+        const queryString = params.toString();
+        const centerApiUrl = `${import.meta.env.VITE_CENTRAL_API}${import.meta.env.VITE_GET_STUDENT_ATTENDANCE}${studentId}${queryString ? `?${queryString}` : ''}`;
+        
+        return {
+          url: centerApiUrl,
+          method: "GET",
+          headers: {
+            'x-access-key': '2d4be3923900850970e8817835c3b92b:0f6f6395561d1503a09e1bd307dc7da0917e1c0a887b6f5c984eb3fe2cf86098'
+          }
+        };
+      },
+      providesTags: (result, error, { studentId }) => [
+        { type: 'Student', id: `attendance-${studentId}` }
+      ],
+      keepUnusedDataFor: 60,
+    }),
+
   }),
 });
 
@@ -568,5 +608,6 @@ export const {
   useRescheduleInterviewMutation,
   useAddInterviewRoundMutation,
   useConfirmPlacementMutation,
-  useCreatePlacementPostMutation
+  useCreatePlacementPostMutation,
+  useGetStudentAttendanceQuery
 } = authApi;

@@ -1,11 +1,13 @@
 /* eslint-disable react/prop-types */
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
-import { useGetAdmittedStudentsByIdQuery, useUpdateStudentImageMutation, useUploadResumeMutation } from "../../redux/api/authApi";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { useGetAdmittedStudentsByIdQuery, useUpdateStudentImageMutation, useUploadResumeMutation, useGetStudentAttendanceQuery } from "../../redux/api/authApi";
 import PermissionModal from "./PermissionModal";
 import PlacementModal from "./PlacementModal";
 import Loader from "../common-components/loader/Loader";
 import UpdateTechnologyModal from "./UpdateTechnologyModal";
+import AttendanceCalendar from "./AttendanceCalendar";
+import AttendanceModal from "./AttendanceModal";
 import { toast } from "react-toastify";
 
 // Icons & Images
@@ -23,6 +25,7 @@ import studentProfileBg from "../../assets/images/Student_profile_2nd_bg.jpg";
 import { HiArrowNarrowLeft } from "react-icons/hi";
 import { IoCamera } from "react-icons/io5";
 import { Chart } from "react-google-charts";
+import { FiEye, FiFilter } from "react-icons/fi";
 
 export default function StudentProfile() {
   const { id } = useParams();
@@ -36,8 +39,24 @@ export default function StudentProfile() {
   const [isYearView, setIsYearView] = useState(false);
   const [isTechModalOpen, setTechModalOpen] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
+  const [showCalendarView, setShowCalendarView] = useState(false);
+  const [attendanceFilters, setAttendanceFilters] = useState({
+    month: new Date().toISOString().slice(0, 7), // Current month in YYYY-MM format
+    session: '',
+    date: ''
+  });
+  const [selectedAttendanceRecord, setSelectedAttendanceRecord] = useState(null);
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // Fetch attendance data
+  const { data: attendanceData, isLoading: isAttendanceLoading, refetch: refetchAttendance } = useGetStudentAttendanceQuery({
+    studentId: studentData?.stdId || id,
+    ...attendanceFilters
+  }, {
+    skip: !studentData?.stdId && !id
+  });
 
 
   useEffect(() => {
@@ -173,6 +192,79 @@ export default function StudentProfile() {
     reader.readAsDataURL(file);
   };
 
+  // Handle attendance filter changes
+  const handleFilterChange = (filterType, value) => {
+    setAttendanceFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  // Handle calendar date click
+  const handleCalendarDateClick = (attendanceRecord) => {
+    if (attendanceRecord) {
+      setSelectedAttendanceRecord(attendanceRecord);
+      setIsAttendanceModalOpen(true);
+    } else {
+      setShowCalendarView(false);
+    }
+  };
+
+  // Calculate attendance statistics
+  const attendanceStats = useMemo(() => {
+    if (!attendanceData?.data?.attendance) {
+      return { totalDays: 0, presentDays: 0, absentDays: 0, attendanceRate: 0 };
+    }
+    
+    const attendance = attendanceData.data.attendance;
+    const totalDays = attendance.length;
+    const presentDays = attendance.filter(record => record.is_present === 1).length;
+    const absentDays = totalDays - presentDays;
+    const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+    
+    return { totalDays, presentDays, absentDays, attendanceRate };
+  }, [attendanceData]);
+
+  // Generate monthly chart data from API
+  const generateMonthlyChartData = () => {
+    if (!attendanceData?.data?.attendance) {
+      return [
+        ["Month", "Attendance", { role: "style" }],
+        ["No Data", 0, "#EF4444"]
+      ];
+    }
+
+    const monthlyStats = {};
+    attendanceData.data.attendance.forEach(record => {
+      const date = new Date(record.date);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+      
+      if (!monthlyStats[monthKey]) {
+        monthlyStats[monthKey] = { total: 0, present: 0 };
+      }
+      
+      monthlyStats[monthKey].total++;
+      if (record.is_present === 1) {
+        monthlyStats[monthKey].present++;
+      }
+    });
+
+    const chartData = [
+      ["Month", "Attendance", { role: "style" }]
+    ];
+
+    Object.entries(monthlyStats).forEach(([month, stats]) => {
+      const percentage = Math.round((stats.present / stats.total) * 100);
+      const color = percentage >= 80 ? "#22C55E" : percentage >= 60 ? "#FDA92D" : "#EF4444";
+      chartData.push([month, percentage, color]);
+    });
+
+    return chartData.length > 1 ? chartData : [
+      ["Month", "Attendance", { role: "style" }],
+      ["No Data", 0, "#EF4444"]
+    ];
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -183,21 +275,7 @@ export default function StudentProfile() {
 
   if (isError || !studentData) return <div className="p-4 text-red-500">Error loading student data.</div>;
 
-  const monthlyData = [
-    ["Month", "Attendance", { role: "style" }],
-    ["Jan", 100, "#22C55E"],
-    ["Feb", 90, "#22C55E"],
-    ["Mar", 75, "#FDA92D"],
-    ["Apr", 80, "#22C55E"],
-    ["May", 60, "#FDA92D"],
-    ["Jun", 50, "#FDA92D"],
-    ["Jul", 45, "#EF4444"],
-    ["Aug", 40, "#EF4444"],
-    ["Sep", 38, "#EF4444"],
-    ["Oct", 30, "#EF4444"],
-    ["Nov", 30, "#EF4444"],
-    ["Dec", 25, "#EF4444"],
-  ];
+  const monthlyData = generateMonthlyChartData();
   // Check permission status
   const hasPermission = studentData.permissionDetails && studentData.permissionDetails !== null && typeof studentData.permissionDetails === 'object' && Object.keys(studentData.permissionDetails).length > 0;
   const permissionStatus = hasPermission ? "Yes" : "No";
@@ -333,9 +411,9 @@ export default function StudentProfile() {
           <ProfessionalMetricCard
             icon={attendence}
             title="Attendance Rate"
-            value="93%"
+            value={`${attendanceStats.attendanceRate}%`}
             bgColor="#FDA92D"
-            description="Monthly average"
+            description={isAttendanceLoading ? "Loading..." : "Current period"}
           />
           <ProfessionalMetricCard
             icon={level}
@@ -369,124 +447,144 @@ export default function StudentProfile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Attendance Analytics */}
           <div className="lg:col-span-2">
-            <div className={`transition-all duration-500 ${isYearView ? 'hidden' : 'block'}`}>
-              <AnalyticsCard
-                title="Attendance Analytics"
-                subtitle="Monthly performance tracking with trends"
-                icon="📊"
-                showButton={true}
-                buttonText="Yearly"
-                onButtonClick={() => setIsYearView(!isYearView)}
-              >
-                <div className="h-48 sm:h-80">
-                  <Chart
-                    chartType="ColumnChart"
-                    data={monthlyData}
-                    options={{
-                      backgroundColor: 'transparent',
-                      chartArea: { width: '85%', height: '75%' },
-                      colors: ['#22C55E', '#FDA92D', '#EF4444'],
-                      bar: { groupWidth: '60%' },
-                      hAxis: {
-                        textStyle: { color: '#6B7280', fontSize: 11 },
-                        gridlines: { color: 'transparent' }
-                      },
-                      vAxis: {
-                        textStyle: { color: '#6B7280', fontSize: 11 },
-                        gridlines: { color: '#F3F4F6' }
-                      },
-                      legend: 'none'
-                    }}
-                    width="100%"
-                    height="100%"
-                  />
-                </div>
-              </AnalyticsCard>
-            </div>
-            <div className={`transition-all duration-500 ${isYearView ? 'block' : 'hidden'}`}>
-              <AnalyticsCard
-                title="Attendance Analytics"
-                subtitle="Yearly performance overview"
-                icon="📊"
-                showButton={true}
-                buttonText="Monthly"
-                onButtonClick={() => setIsYearView(!isYearView)}
-              >
-                <div className="h-48 sm:h-80 flex items-center justify-center gap-8">
-                  <div className="relative w-80 h-80">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200" opacity={0.7}>
-                      {/* 2022 - Innermost ring */}
-                      <circle cx="100" cy="100" r="40" fill="none" stroke="#F8F9FA" strokeWidth="8" />
-                      <circle cx="100" cy="100" r="40" fill="none" stroke="#B66816" strokeWidth="8"
-                        strokeDasharray={`${92 * 2.51} 251`} strokeLinecap="round" />
+            {!showCalendarView ? (
+              <div className={`transition-all duration-500 ${isYearView ? 'hidden' : 'block'}`}>
+                <AnalyticsCard
+                  title="Attendance Analytics"
+                  subtitle="Monthly performance tracking with trends"
+                  icon="📊"
+                  showButton={true}
+                  buttonText="Calendar View"
+                  onButtonClick={() => setShowCalendarView(true)}
+                >
+                  {/* Attendance Filters */}
+                  <div className="mb-4 flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2">
+                      <FiFilter className="w-4 h-4 text-gray-600" />
+                      <select
+                        value={attendanceFilters.month}
+                        onChange={(e) => handleFilterChange('month', e.target.value)}
+                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">All Months</option>
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const date = new Date(2025, i, 1);
+                          const value = date.toISOString().slice(0, 7);
+                          const label = date.toLocaleDateString('en-US', { month: 'long' });
+                          return <option key={value} value={value}>{label}</option>;
+                        })}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={attendanceFilters.session}
+                        onChange={(e) => handleFilterChange('session', e.target.value)}
+                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">All Years</option>
+                        <option value="I">Year I</option>
+                        <option value="II">Year II</option>
+                        <option value="III">Year III</option>
+                      </select>
+                    </div>
+                    <button
+                      onClick={() => setShowCalendarView(true)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <FiEye className="w-4 h-4" />
+                      Calendar View
+                    </button>
+                  </div>
+                  
+                  {isAttendanceLoading ? (
+                    <div className="h-48 sm:h-80 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">Loading attendance data...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-48 sm:h-80">
+                      <Chart
+                        chartType="ColumnChart"
+                        data={monthlyData}
+                        options={{
+                          backgroundColor: 'transparent',
+                          chartArea: { width: '85%', height: '75%' },
+                          colors: ['#22C55E', '#FDA92D', '#EF4444'],
+                          bar: { groupWidth: '60%' },
+                          hAxis: {
+                            textStyle: { color: '#6B7280', fontSize: 11 },
+                            gridlines: { color: 'transparent' }
+                          },
+                          vAxis: {
+                            textStyle: { color: '#6B7280', fontSize: 11 },
+                            gridlines: { color: '#F3F4F6' },
+                            format: '#"%"'
+                          },
+                          legend: 'none'
+                        }}
+                        width="100%"
+                        height="100%"
+                      />
+                    </div>
+                  )}
+                </AnalyticsCard>
+              </div>
+            ) : (
+              <AttendanceCalendar
+                attendanceData={attendanceData?.data}
+                onDateClick={handleCalendarDateClick}
+              />
+            )}
+            {!showCalendarView && (
+              <div className={`transition-all duration-500 ${isYearView ? 'block' : 'hidden'}`}>
+                <AnalyticsCard
+                  title="Attendance Analytics"
+                  subtitle="Yearly performance overview"
+                  icon="📊"
+                  showButton={true}
+                  buttonText="Monthly"
+                  onButtonClick={() => setIsYearView(!isYearView)}
+                >
+                  <div className="h-48 sm:h-80 flex items-center justify-center gap-8">
+                    <div className="relative w-80 h-80">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200" opacity={0.7}>
+                        {/* Current year ring */}
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#F8F9FA" strokeWidth="8" />
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="#FDA92D" strokeWidth="8"
+                          strokeDasharray={`${attendanceStats.attendanceRate * 5.03} 503`} strokeLinecap="round" />
+                      </svg>
 
-                      {/* 2023 - Middle ring */}
-                      <circle cx="100" cy="100" r="60" fill="none" stroke="#F8F9FA" strokeWidth="8" />
-                      <circle cx="100" cy="100" r="60" fill="none" stroke="#FDA92D" strokeWidth="8"
-                        strokeDasharray={`${88 * 3.77} 377`} strokeLinecap="round" />
-
-                      {/* 2024 - Outermost ring */}
-                      <circle cx="100" cy="100" r="80" fill="none" stroke="#F8F9FA" strokeWidth="8" />
-                      <circle cx="100" cy="100" r="80" fill="none" stroke="#FED680" strokeWidth="8"
-                        strokeDasharray={`${65 * 5.03} 503`} strokeLinecap="round" />
-                    </svg>
-
-                    {/* Center Text */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-2xl font-bold text-gray-800">82%</div>
-                      <div className="text-xs text-gray-500">Average</div>
+                      {/* Center Text */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-gray-800">{attendanceStats.attendanceRate}%</div>
+                        <div className="text-xs text-gray-500">Current</div>
+                      </div>
                     </div>
 
-                    {/* Year Labels */}
-                    <div className="absolute inset-0">
-                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-600">2024</div>
-                      <div className="absolute top-12 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-600">2023</div>
-                      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-600">2022</div>
+                    {/* Stats Summary */}
+                    <div className="bg-white rounded-lg p-4" style={{ boxShadow: '0 0 18px 5px rgba(0, 0, 0, 0.08)' }}>
+                      <h4 className="text-sm font-semibold text-gray-800 mb-4">Attendance Summary</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Total Days:</span>
+                          <span className="text-xs font-medium text-gray-700">{attendanceStats.totalDays}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Present:</span>
+                          <span className="text-xs font-medium text-green-700">{attendanceStats.presentDays}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Absent:</span>
+                          <span className="text-xs font-medium text-red-700">{attendanceStats.absentDays}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Progress Rate Indicator */}
-                  <div className="bg-white rounded-lg p-4" style={{ boxShadow: '0 0 18px 5px rgba(0, 0, 0, 0.08)' }}>
-                    <h4 className="text-sm font-semibold text-gray-800 mb-4">Progress Rate</h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600">2024</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-gray-200 rounded-full">
-                            <div className="h-2 bg-orange-200 rounded-full" style={{ width: '65%' }}></div>
-                          </div>
-                          <span className="text-xs font-medium text-gray-700">65%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600">2023</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-gray-200 rounded-full">
-                            <div className="h-2 bg-orange-300 rounded-full" style={{ width: '88%' }}></div>
-                          </div>
-                          <span className="text-xs font-medium text-gray-700">88%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600">2022</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-gray-200 rounded-full">
-                            <div className="h-2 bg-orange-400 rounded-full" style={{ width: '92%' }}></div>
-                          </div>
-                          <span className="text-xs font-medium text-gray-700">92%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-3 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Trend</span>
-                        <span className="text-xs font-medium text-red-600">↓ -4.5%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </AnalyticsCard>
-            </div>
+                </AnalyticsCard>
+              </div>
+            )}
           </div>
 
           {/* Progress Overview */}
@@ -727,6 +825,12 @@ export default function StudentProfile() {
         isOpen={isTechModalOpen}
         onClose={() => setTechModalOpen(false)}
         studentId={studentData._id}
+      />
+      <AttendanceModal
+        isOpen={isAttendanceModalOpen}
+        onClose={() => setIsAttendanceModalOpen(false)}
+        attendanceRecord={selectedAttendanceRecord}
+        studentData={studentData}
       />
     </div>
   );
