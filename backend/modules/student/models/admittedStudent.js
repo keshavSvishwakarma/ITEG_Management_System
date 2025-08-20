@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const levelSchema = new mongoose.Schema({
   levelNo: { type: String, default: "1A" }, // e.g., "Level 1"
   noOfAttempts: { type: Number, default: 0 },
+  Topic: { type: String, default: "" },
   Theoretical_Marks: { type: Number, default: 0 },
   Practical_Marks: { type: Number, default: 0 },
   Communication_Marks: { type: Number, default: 0 },
@@ -16,26 +17,47 @@ const levelSchema = new mongoose.Schema({
   }
 });
 
+
 const placedInfoSchema = new mongoose.Schema({
+  companyRef: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
+  interviewRecordId: { type: mongoose.Schema.Types.ObjectId }, // Which interview led to placement
   companyName: { type: String, required: true },
   salary: { type: Number, required: true },
   location: { type: String, required: true },
   jobProfile: { type: String, required: true },
-  // companyLogo:{ type: String, required: true },
-  jobType:{type:String}
+  jobType: { type: String, enum: ['Internship', 'Full-Time', 'PPO'], default: 'Full-Time' },
+  joiningDate: { type: Date },
+  placedDate: { type: Date, default: Date.now },
+  offerLetterURL: { type: String },
+  applicationURL: { type: String }
 });
 
-const interviewRecordSchema = new mongoose.Schema({
-  companyName: { type: String, required: true },
-  interviewDate: { type: Date, required: true },
-  remark: { type: String, default: "" },
-  result: {
-    type: String,
-    enum: ['Selected', 'Rejected', 'Pending'],
-    default: 'Pending'
+
+const interviewRoundSchema = new mongoose.Schema({
+  roundName: { type: String, required: true }, // e.g., "HR Round", "Technical Round"
+  date: { type: Date, required: true },
+  mode: { type: String, enum: ['Online', 'Offline', 'Telephonic'], default: 'Offline' },
+  feedback: { type: String, default: "" },
+  result: { type: String, enum: ['Passed', 'Failed', 'Pending'], default: 'Pending' }
+});
+
+const interviewRecord = new mongoose.Schema({
+  companyRef: {type: mongoose.Schema.Types.ObjectId,
+    ref:"Company",
+     required: false
   },
-  location: { type: String, required: true },
-  jobProfile: { type: String, required: true }
+  jobProfile: { type: String, required: true },
+  
+  status: {
+    type: String,
+    enum: ['Scheduled', 'Rescheduled', 'Ongoing', 'Selected', 'RejectedByStudent', 'RejectedByCompany'],
+    default: 'Scheduled'
+  },
+  statusRemark: { type: String, default: "" },
+  scheduleDate: { type: Date, required: true },
+  rescheduleDate: { type: Date },
+  rounds: { type: [interviewRoundSchema], default: [] }, // Multiple rounds tracking
+  
 });
 
 const permissionSchema = new mongoose.Schema({
@@ -92,7 +114,7 @@ const AdmittedStudentSchema = new mongoose.Schema({
   placedInfo: { type: placedInfoSchema, default: null },
 
   // 🗓️ Interviews
-  interviewRecord: { type: [interviewRecordSchema], default: [] },
+  PlacementinterviewRecord: { type: [interviewRecord], default: [] },
 
   // Permission
   permissionDetails: { type: permissionSchema, default: null },
@@ -104,6 +126,12 @@ const AdmittedStudentSchema = new mongoose.Schema({
     default: 'Not Ready'
   },
   resumeURL: { type: String, default: "" },
+
+  // 📄 Placement Documents (after placement)
+  offerLetter: { type: String, default: "" }, // Base64 image/PDF
+  commitmentApplication: { type: String, default: "" }, // Base64 image
+  documentsUploadedBy: { type: String, default: "" },
+  documentsUploadedAt: { type: Date }
 
 }, { timestamps: true });
 
