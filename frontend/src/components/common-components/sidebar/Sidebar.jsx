@@ -24,8 +24,7 @@ const Sidebar = ({ children }) => {
     if (path === "/admission-process" || path.startsWith("/admission/") || path.startsWith("/interview-detail/") || path === "/admission-record") {
       openMenus.push(1);
     }
-    // Admitted menu (index 2)
-    if (path === "/student-dashboard" || path === "/student-detail-table" || path.startsWith("/student/") || path === "/student-permission") {
+    if (path === "/readiness-status" || path === "/placement-interview-record" || path === "/placement-post" || path === "/company-details" || path.startsWith("/interview-history/")) {
       openMenus.push(2);
     }
     // Placements menu (index 3)
@@ -58,9 +57,8 @@ const Sidebar = ({ children }) => {
       newOpenMenus.push(2);
       localStorage.setItem("lastSection", "admitted");
     }
-    // Placements menu (index 3)
-    if (path === "/readiness-status" || path === "/placement-interview-record" || path === "/placement-post" || path.startsWith("/interview-history/")) {
-      newOpenMenus.push(3);
+    if (path === "/readiness-status" || path === "/placement-interview-record" || path === "/placement-post" || path === "/company-details" || path.startsWith("/interview-history/")) {
+      newOpenMenus.push(2);
     }
     if (path.startsWith("/student-profile/")) {
       const lastSection = localStorage.getItem("lastSection");
@@ -140,6 +138,7 @@ const Sidebar = ({ children }) => {
       roles: ["superadmin", "admin", "faculty"],
       subMenu: [
         { name: "Placement Candidates", path: "/readiness-status" },
+        { name: "Company Details", path: "/company-details" },
         { name: "Placed Students", path: "/placement-post" },
       ],
     },

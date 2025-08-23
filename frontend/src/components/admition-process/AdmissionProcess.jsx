@@ -229,10 +229,25 @@ const StudentList = () => {
   };
 
   const filteredData = data.filter((student) => {
-    const searchableValues = Object.values(student)
-      .map((val) => String(val ?? "").toLowerCase())
-      .join(" ");
-    if (!searchableValues.includes(searchTerm.toLowerCase())) return false;
+    // Only search in specific fields: firstName, lastName, fatherName, track, and course
+    const searchableFields = [
+      student.firstName || "",
+      student.lastName || "", 
+      student.fatherName || "",
+      student.track || "",
+      student.course || ""
+    ];
+    
+    // Filter out numbers and only keep alphabetic characters and spaces
+    const searchableValues = searchableFields
+      .map((val) => String(val).toLowerCase().replace(/[0-9]/g, '').trim())
+      .join(" ")
+      .replace(/\s+/g, ' '); // Replace multiple spaces with single space
+    
+    const searchTermClean = searchTerm.toLowerCase().replace(/[0-9]/g, '').trim();
+    
+    if (!searchTermClean) return true; // If no valid search term, show all
+    if (!searchableValues.includes(searchTermClean)) return false;
 
     const track = toTitleCase(student.track || "");
     const latestResult = toTitleCase(
@@ -299,13 +314,13 @@ const StudentList = () => {
     switch (result) {
       case "Pass":
         return (
-          <span className="inline-block px-2 py-1 rounded-md text-[#118D57] bg-[#22C55E]/20 text-sm font-medium">
+          <span className="inline-block px-2 py-1 rounded-md text-[#118D57] bg-[#22C55E]/20 text-sm font-bold">
             Pass
           </span>
         );
       case "Fail":
         return (
-          <span className="inline-block px-2 py-1 rounded-md bg-[#FFCEC3] text-[#D32F2F] text-sm font-medium">
+          <span className="inline-block px-2 py-1 rounded-md bg-[#FFCEC3] text-[#D32F2F] text-sm font-bold">
             Fail
           </span>
         );
@@ -330,13 +345,13 @@ const StudentList = () => {
     switch (result) {
       case "Pass":
         return (
-          <span className="inline-block px-2 py-1 rounded-md text-[#118D57] bg-[#22C55E]/20 text-sm font-medium">
+          <span className="inline-block px-2 py-1 rounded-md text-[#118D57] bg-[#22C55E]/20 text-sm font-bold">
             Pass
           </span>
         );
       case "Fail":
         return (
-          <span className="inline-block px-2 py-1 rounded-md bg-[#FFCEC3] text-[#D32F2F] text-sm font-medium">
+          <span className="inline-block px-2 py-1 rounded-md bg-[#FFCEC3] text-[#D32F2F] text-sm font-bold">
             Fail
           </span>
         );
@@ -399,7 +414,7 @@ const StudentList = () => {
       actionButton = (row) => (
         <button
           onClick={() => scheduleButton(row)}
-          className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#FED680] active:bg-[#B66816] transition relative"
+          className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#ED9A21] active:bg-[#B66816] transition relative"
         >
           Take Interview
         </button>
@@ -449,7 +464,7 @@ const StudentList = () => {
       actionButton = (row) => (
         <button
           onClick={() => scheduleButton(row)}
-          className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#FED680] active:bg-[#B66816] transition relative"
+          className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#ED9A21] active:bg-[#B66816] transition relative"
         >
           Take Interview
         </button>
@@ -517,7 +532,7 @@ const StudentList = () => {
               setAddInterviwModalOpen(true)
               setId(row._id)
             }}
-            className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#FED680] active:bg-[#B66816] transition relative"
+            className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#ED9A21] active:bg-[#B66816] transition relative"
           >
             Take Interview
           </button>
