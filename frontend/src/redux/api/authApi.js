@@ -415,10 +415,16 @@ export const authApi = createApi({
     //Placement api calling
     // get all ready students for placement
     getReadyStudentsForPlacement: builder.query({
-      query: () => ({
-        url: import.meta.env.VITE_GET_READY_STUDENTS_FOR_PLACEMENT,
-        method: "GET",
-      }),
+      query: () => {
+        console.log('🎯 Ready Students API Call:', {
+          endpoint: import.meta.env.VITE_GET_READY_STUDENTS_FOR_PLACEMENT,
+          fullUrl: `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_GET_READY_STUDENTS_FOR_PLACEMENT}`
+        });
+        return {
+          url: import.meta.env.VITE_GET_READY_STUDENTS_FOR_PLACEMENT,
+          method: "GET",
+        };
+      },
       providesTags: ['PlacementStudent'],
       keepUnusedDataFor: 300, // Keep data for 5 minutes
     }),

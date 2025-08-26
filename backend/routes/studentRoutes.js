@@ -28,7 +28,6 @@ router.get("/Ready_Students", verifyToken, checkRole(allowedRoles), studentContr
 
 router.post("/create_level/:id", verifyToken, checkRole(allowedRoles), studentController.createLevels);
 
-
 router.get("/permission_students", verifyToken, checkRole(allowedRoles), studentController.getAllPermissionStudents
 );
 
@@ -42,7 +41,6 @@ router.post('/interviews/:studentId/:interviewId/add_round', verifyToken, checkR
 
 // 2. Student Lists
 router.get('/selected_students', verifyToken, checkRole(allowedRoles), placementController.getSelectedStudents);
-router.get('/Ready_Students', verifyToken, checkRole(allowedRoles), studentController.getReadyStudent); // Keep original
 router.get('/placed_students', verifyToken, checkRole(allowedRoles), placementController.getPlacedStudents);
 
 // 3. Placement Management

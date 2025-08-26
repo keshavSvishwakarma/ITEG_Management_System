@@ -552,11 +552,19 @@ exports.updateAdmittedStudent = async (req, res) => {
 
 exports.getReadyStudent = async (req, res) => {
   try {
+    console.log('🚀 Ready Students API called');
+    
     // Find all students whose readinessStatus is "Ready"
     const readyStudents = await AdmittedStudent.find({ readinessStatus: 'Ready' }).sort({ updatedAt: -1 });
+    
+    console.log(`📊 Found ${readyStudents.length} ready students`);
 
     if (readyStudents.length === 0) {
-      return res.status(404).json({ message: "No students found with readinessStatus 'Ready'." });
+      console.log('⚠️ No ready students found');
+      return res.status(200).json({ 
+        message: "No students found with readinessStatus 'Ready'.",
+        data: []
+      });
     }
 
     return res.status(200).json({
@@ -565,7 +573,7 @@ exports.getReadyStudent = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error fetching ready students:", error);
+    console.error("🔴 Error fetching ready students:", error);
     return res.status(500).json({
       message: 'Failed to fetch ready students.',
       error: error.message,
