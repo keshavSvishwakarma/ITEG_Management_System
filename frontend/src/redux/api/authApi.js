@@ -146,6 +146,14 @@ export const authApi = createApi({
         }
       },
     }),
+
+    signup: builder.mutation({
+      query: (userData) => ({
+        url: import.meta.env.VITE_SIGNUP_ENDPOINT || '/api/auth/signup',
+        method: "POST",
+        body: userData,
+      }),
+    }),
     // ---- Create User API ----
     updateUser: builder.mutation({
       query: ({ id, data }) => ({
@@ -360,6 +368,18 @@ export const authApi = createApi({
           body: { techno },
         };
       },
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Student', id }
+      ],
+      async onQueryStarted({ id, techno }, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Invalidate specific student data to force refetch
+          dispatch(authApi.util.invalidateTags([{ type: 'Student', id }]));
+        } catch (error) {
+          console.error('Failed to update technology:', error);
+        }
+      },
     }),
 
     updateStudentImage: builder.mutation({
@@ -522,6 +542,7 @@ export const authApi = createApi({
         url: `/admitted/students/confirm_placement`,
         method: "POST",
         body: data,
+        formData: true,
       }),
       invalidatesTags: ['PlacementStudent', 'Student'],
       async onQueryStarted(data, { dispatch, queryFulfilled }) {
@@ -538,11 +559,31 @@ export const authApi = createApi({
     // Create placement post
     createPlacementPost: builder.mutation({
       query: (data) => ({
-        url: `admitted/students/placement_post`,
+        url: `/admitted/students/placement_post`,
         method: "POST",
         body: data,
       }),
       invalidatesTags: ['PlacementStudent'],
+    }),
+
+    // Get all companies
+    getAllCompanies: builder.query({
+      query: () => ({
+        url: '/admitted/students/companies',
+        method: "GET",
+      }),
+      providesTags: ['Company'],
+    }),
+
+    // Get placed students by company ID
+    getPlacedStudentsByCompany: builder.query({
+      query: (companyId) => ({
+        url: `/admitted/students/companies/placed_students/${companyId}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, companyId) => [
+        { type: 'PlacementStudent', id: companyId }
+      ],
     }),
 
   }),
@@ -550,6 +591,7 @@ export const authApi = createApi({
 
 export const {
   useLoginMutation,
+  useSignupMutation,
   useLoginWithGoogleMutation,
   useUpdateUserMutation,
   useForgetPasswordMutation,
@@ -584,5 +626,7 @@ export const {
   useRescheduleInterviewMutation,
   useAddInterviewRoundMutation,
   useConfirmPlacementMutation,
-  useCreatePlacementPostMutation
+  useCreatePlacementPostMutation,
+  useGetAllCompaniesQuery,
+  useGetPlacedStudentsByCompanyQuery
 } = authApi;
