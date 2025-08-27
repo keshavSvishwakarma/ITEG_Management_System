@@ -5,7 +5,6 @@ import ForgetPassword from "./components/common-components/forget-password/Forge
 import ConfirmPassword from "./components/common-components/confirm-password/ConfirmPassword";
 import OtpVerification from "./components/common-components/otp-verfication/OtpVeriFication";
 import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
 import OtpEnter from "./components/common-components/otp-verfication/OtpEnter";
 import GoogleSuccess from './components/common-components/login-page/GoogleSuccess.jsx';
 import Layout from "./components/dashboard/Layout.jsx";
