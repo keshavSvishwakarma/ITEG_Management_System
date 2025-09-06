@@ -3331,3 +3331,49 @@ paths:
                   error:
                     type: string
                     example: Internal server error
+
+  /api/admitted/students/update_email/{id}:
+    patch:
+      summary: Update student email
+      description: Update student email by prkey
+      tags:
+        - Admitted Student
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prkey, email]
+              properties:
+                prkey:
+                  type: string
+                  example: "SS123456"
+                email:
+                  type: string
+                  format: email
+                  example: "student@example.com"
+      responses:
+        '200':
+          description: Email updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Email updated successfully"
+        '400':
+          description: Invalid input or email format
+        '404':
+          description: Student not found

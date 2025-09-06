@@ -4,7 +4,7 @@ const { verifyToken, checkRole } = require("../middlewares/authMiddleware");
 const studentController = require("../modules/student/controllers/AdmittedStudentController");
 const placementController = require("../modules/student/controllers/placementController");
 const attendanceController = require("../modules/student/controllers/attendanceController");
-
+const { updateEmail } = require("../modules/student/controllers/attendanceController");
 const upload = require('../config/multerConfig');
 
 const allowedRoles = ["superadmin", "faculty", "admin"];
@@ -87,5 +87,8 @@ router.get("/companies/placed_students/:companyId", placementController.getPlace
 
 // Attendance Statistics Route
 router.get("/attendance/stats", verifyToken, checkRole(allowedRoles), attendanceController.getOverallAttendanceStats);
+
+
+router.patch("/update_email/:id", studentController.updateStudentEmail);
 
 module.exports = router;

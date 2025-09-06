@@ -500,7 +500,7 @@ exports.updateAdmittedStudent = async (req, res) => {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       fatherName: req.body.fatherName,
-      email: req.body.email,
+ 
       studentMobile: req.body.studentMobile,
       parentMobile: req.body.parentMobile,
       gender: req.body.gender,
@@ -630,7 +630,7 @@ exports.addInterviewRecord = async (req, res) => {
 exports.updateInterviewRecord = async (req, res) => {
   try {
     const { studentId, interviewId } = req.params;
-    const { status } = req.body;
+    const { status, remark } = req.body;
 
     const validStatuses = ['Scheduled', 'Rescheduled', 'Ongoing', 'Selected', 'RejectedByStudent', 'RejectedByCompany'];
     
@@ -648,8 +648,8 @@ exports.updateInterviewRecord = async (req, res) => {
       return res.status(404).json({ success: false, message: "Interview record not found" });
     }
 
+    interview.status = status;
     if (remark !== undefined) interview.remark = remark;
-    if (result !== undefined) interview.status = result; // Using status field as per schema
 
     await student.save();
 
@@ -748,72 +748,6 @@ exports.uploadResumeBase64= async (req, res) => {
 //     });
 //   }
 // };
-
-
-
-// 
-
-// exports.uploadResumeBase64 = async (req, res) => {
-//   const { studentId, fileName, fileData } = req.body;
-
-//   if (!studentId || !fileName || !fileData) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "Missing studentId, fileName, or fileData"
-//     });
-//   }
-
-//   try {
-//     // ✅ Ensure PDF base64 prefix
-//     const base64Pdf = fileData.startsWith("data:application/pdf;base64,")
-//       ? fileData
-//       : `data:application/pdf;base64,${fileData}`;
-
-//     // ✅ Upload to Cloudinary
-//     // const result = await cloudinary.uploader.upload(base64Pdf, {
-//     //   folder: "student_resumes",
-//     //   resource_type: "raw",
-//     //   public_id: `${studentId}_${Date.now()}`
-//     // });
-
-// //     const result = await cloudinary.uploader.upload(base64Pdf, {
-// //   folder: "student_resumes",
-// //   resource_type: "auto",   // let Cloudinary detect it’s a PDF
-// //   public_id: `${studentId}_${Date.now()}`
-// // });
-
-// //     // ✅ Return URLs
-// //     return res.status(200).json({
-// //       success: true,
-// //       message: "Resume uploaded successfully",
-// //       url: result.secure_url, // original Cloudinary URL
-// //       viewUrl: result.secure_url.replace("/upload/", "/upload/"), // open in browser
-// //       downloadUrl: result.secure_url.replace("/upload/", "/upload/fl_attachment/") // force download
-// //     });
-
-// const result = await cloudinary.uploader.upload(base64Pdf, {
-//   folder: "student_resumes",
-//   resource_type: "auto",   // detect automatically (PDF will be served correctly)
-//   public_id: `${studentId}_${Date.now()}`
-// });
-
-// // ✅ Return URLs
-// return res.status(200).json({
-//   success: true,
-//   message: "Resume uploaded successfully",
-//   url: result.secure_url, // direct PDF link
-//   viewUrl: result.secure_url, // open in browser
-//   downloadUrl: result.secure_url.replace("/upload/", "/upload/fl_attachment/") // force download
-//  });
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: "Error uploading resume",
-//       error: error.message
-//     });
-//   }
-// };
-
 
 
 
@@ -1010,6 +944,104 @@ exports.rescheduleInterview = async (req, res) => {
 // };
 
 
+// const updateStudentEmail = async (req, res) => {
+//   try {
+//     const { prkey, email } = req.body;
 
+//     // Validation
+//     if (!prkey || !email) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "prkey and email are required",
+//       });
+//     }
+
+//     // Email format check
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid email format",
+//       });
+//     }
+
+//     // Find student and update
+//     const student = await AdmittedStudent.findOneAndUpdate(
+//       { prkey },
+//       { email },
+//       { new: true }
+//     );
+
+//     if (!student) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Student not found",
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Email updated successfully",
+//       data: student,
+//     });
+//   } catch (error) {
+//     console.error("❌ Error updating email:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal Server Error",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// module.exports = { updateStudentEmail };
+
+exports.updateStudentEmail = async (req, res) => {
+  try {
+    const { prkey, email } = req.body;
+
+    if (!prkey || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "prkey and email are required",
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format",
+      });
+    }
+
+    const student = await AdmittedStudent.findOneAndUpdate(
+      { prkey },
+      { email },
+      { new: true }
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Email updated successfully",
+      data: student,
+    });
+  } catch (error) {
+    console.error("❌ Error updating email:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 
 
