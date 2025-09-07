@@ -1,17 +1,22 @@
+// /* eslint-disable no-unused-vars */
 import logo from '../../../assets/images/doulLogo.png';
 import defaultProfile from '../../../assets/images/profile-img.png';
 import UserProfile from '../user-profile/UserProfile';
-import { Plus, X } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useSignupMutation } from '../../../redux/api/authApi';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import InputField from '../common-feild/InputField';
 import CustomDropdown from '../common-feild/CustomDropdown';
+import { buttonStyles } from '../../../styles/buttonStyles';
 
 const validationSchema = Yup.object({
     name: Yup.string().required('Name is required'),
-    email: Yup.string().email('Invalid email').required('Email is required'),
+    email: Yup.string()
+        .email('Invalid email')
+        .matches(/^[a-zA-Z0-9._%+-]+@ssism\.org$/, 'Email must be from @ssism.org domain')
+        .required('Email is required'),
     password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
     mobileNo: Yup.string().matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits').required('Mobile number is required'),
     adharCard: Yup.string().matches(/^[0-9]{12}$/, 'Adhar card must be 12 digits').required('Adhar card is required'),
@@ -23,6 +28,7 @@ const validationSchema = Yup.object({
 const Header = () => {
     const userRole = localStorage.getItem('role');
     const [showModal, setShowModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
     const [signup, { isLoading }] = useSignupMutation();
 
     const initialValues = {
@@ -41,10 +47,24 @@ const Header = () => {
         setShowModal(true);
     };
 
+    const handleImageUpload = (file, setFieldValue) => {
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setFieldValue('profileImage', e.target.result);
+            setSelectedImage(file);
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleSubmit = async (values, { resetForm }) => {
         const facultyData = {
             ...values,
-            profileImage: values.profileImage || defaultProfile
+            profileImage: values.profileImage || defaultProfile,
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
         };
 
         try {
@@ -52,8 +72,11 @@ const Header = () => {
             alert('Faculty added successfully!');
             setShowModal(false);
             resetForm();
+            setSelectedImage(null);
         } catch (error) {
-            alert(error?.data?.message || 'Error adding faculty');
+            console.error('Signup error:', error);
+            const errorMessage = error?.data?.message || error?.message || 'Error adding faculty';
+            alert(errorMessage);
         }
     };
 
@@ -67,11 +90,14 @@ const Header = () => {
                     {userRole === 'admin' && (
                         <button
                             onClick={handleAddFaculty}
-                            className="flex items-center gap-3 px-5 py-3 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-darker)] transition-colors text-sm font-medium"
+                            className={`px-5 py-2 text-sm font-medium ${buttonStyles.primary}`}
                             title="Add Member"
                         >
-                            <Plus size={20} />
-                            <span className="hidden w-max sm:inline">Add Member</span>
+                            <span className="hidden sm:flex sm:items-center sm:gap-2">
+                                <span className="text-lg font-bold">+</span>
+                                <span>Add</span>
+                                <span>User</span>
+                            </span>
                         </button>
                     )}
                     <UserProfile />
@@ -84,7 +110,10 @@ const Header = () => {
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-semibold">Add Member</h2>
                             <button
-                                onClick={() => setShowModal(false)}
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setSelectedImage(null);
+                                }}
                                 className="text-gray-500 hover:text-gray-700"
                             >
                                 <X size={20} />
@@ -96,7 +125,7 @@ const Header = () => {
                             validationSchema={validationSchema}
                             onSubmit={handleSubmit}
                         >
-                            {() => (
+                            {({ setFieldValue }) => (
                                 <Form className="space-y-3">
                                     <div className="grid grid-cols-2 gap-3">
                                         <InputField label="Name" name="name" />
@@ -133,7 +162,32 @@ const Header = () => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3">
-                                        <InputField label="Profile Image URL" name="profileImage" type="url" />
+                                        <div className="relative w-full">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        handleImageUpload(file, setFieldValue);
+                                                    }
+                                                }}
+                                                className="hidden"
+                                                id="image-upload"
+                                            />
+                                            <label
+                                                htmlFor="image-upload"
+                                                className="flex items-center justify-center gap-2 w-full h-12 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Upload size={16} />
+                                                <span className="text-sm">
+                                                    {selectedImage ? selectedImage.name : 'Upload Image'}
+                                                </span>
+                                            </label>
+                                            <label className="absolute left-3 -top-2 bg-white px-1 text-xs text-black pointer-events-none">
+                                                Profile Image
+                                            </label>
+                                        </div>
                                         <CustomDropdown
                                             label="Role"
                                             name="role"
@@ -149,7 +203,7 @@ const Header = () => {
                                         <button
                                             type="submit"
                                             disabled={isLoading}
-                                            className="w-full py-3 bg-[var(--primary)] text-white rounded-md hover:bg-[var(--primary-darker)] transition-colors font-medium disabled:opacity-50"
+                                            className={`w-full py-3 font-medium disabled:opacity-50 ${buttonStyles.primary}`}
                                         >
                                             {isLoading ? 'Adding Member...' : 'Submit'}
                                         </button>

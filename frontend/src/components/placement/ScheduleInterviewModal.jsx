@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { IoClose } from "react-icons/io5";
 import { FaCalendarAlt } from "react-icons/fa";
 import { useState, useEffect } from "react";
+import { buttonStyles } from "../../styles/buttonStyles";
 
 const PRIMARY_COLOR = "#FDA92D";
 const TEXT_COLOR = "#4B4B4B";
@@ -21,7 +22,9 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
   const interviewSchema = Yup.object().shape({
     companyName: Yup.string().required("Required"),
     hrEmail: Yup.string().email("Invalid email").required("Required"),
-    hrContact: Yup.string().required("Required"),
+    hrContact: Yup.string()
+      .matches(/^[0-9]{10}$/, "Must be exactly 10 digits")
+      .required("Required"),
     location: Yup.string().required("Required"),
     jobProfile: Yup.string().required("Required"),
     scheduleDate: Yup.string().required("Required"),
@@ -52,11 +55,11 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
           const [day, month, year] = datePart.split('/');
           const [time, period] = timePart.split(' ');
           const [hour, minute] = time.split(':');
-          
+
           let hour24 = parseInt(hour);
           if (period === 'PM' && hour24 !== 12) hour24 += 12;
           if (period === 'AM' && hour24 === 12) hour24 = 0;
-          
+
           const isoDate = new Date(year, month - 1, day, hour24, minute);
           scheduleDate = isoDate.toISOString();
         }
@@ -113,8 +116,7 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
 
         {/* Title */}
         <h2
-          className="text-2xl font-semibold text-center mb-6"
-          style={{ color: PRIMARY_COLOR }}
+          className="text-2xl font-semibold text-center mb-6 text-[var(--primary)]"
         >
           Company Interview Details
         </h2>
@@ -131,7 +133,7 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
               value={formik.values.companyName}
               className="h-12 border border-gray-300 px-3 rounded-md focus:outline-none focus:border-black w-full peer"
             />
-            <label 
+            <label
               htmlFor="companyName"
               className="absolute left-3 top-3 text-gray-500 transition-all duration-200 cursor-text peer-focus:-top-2 peer-focus:left-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-black peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-black"
             >
@@ -150,7 +152,7 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
               value={formik.values.hrEmail}
               className="h-12 border border-gray-300 px-3 rounded-md focus:outline-none focus:border-black w-full peer"
             />
-            <label 
+            <label
               htmlFor="hrEmail"
               className="absolute left-3 top-3 text-gray-500 transition-all duration-200 cursor-text peer-focus:-top-2 peer-focus:left-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-black peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-black"
             >
@@ -161,20 +163,25 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
           {/* HR Contact */}
           <div className="relative">
             <input
-              type="text"
+              type="tel"
               id="hrContact"
               name="hrContact"
               placeholder=" "
               onChange={formik.handleChange}
               value={formik.values.hrContact}
+              maxLength={10}
+              pattern="[0-9]{10}"
               className="h-12 border border-gray-300 px-3 rounded-md focus:outline-none focus:border-black w-full peer"
             />
-            <label 
+            <label
               htmlFor="hrContact"
               className="absolute left-3 top-3 text-gray-500 transition-all duration-200 cursor-text peer-focus:-top-2 peer-focus:left-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-black peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-black"
             >
               HR Contact
             </label>
+            {formik.touched.hrContact && formik.errors.hrContact && (
+              <div className="text-red-500 text-xs mt-1">{formik.errors.hrContact}</div>
+            )}
           </div>
 
           {/* Location */}
@@ -188,7 +195,7 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
               value={formik.values.location}
               className="h-12 border border-gray-300 px-3 rounded-md focus:outline-none focus:border-black w-full peer"
             />
-            <label 
+            <label
               htmlFor="location"
               className="absolute left-3 top-3 text-gray-500 transition-all duration-200 cursor-text peer-focus:-top-2 peer-focus:left-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-black peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-black"
             >
@@ -207,7 +214,7 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
               value={formik.values.jobProfile}
               className="h-12 border border-gray-300 px-3 rounded-md focus:outline-none focus:border-black w-full peer"
             />
-            <label 
+            <label
               htmlFor="jobProfile"
               className="absolute left-3 top-3 text-gray-500 transition-all duration-200 cursor-text peer-focus:-top-2 peer-focus:left-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-black peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-black"
             >
@@ -244,8 +251,7 @@ const ScheduleInterviewModal = ({ isOpen, onClose, studentId, onSuccess }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 rounded-md text-white hover:opacity-90 transition disabled:opacity-50"
-              style={{ backgroundColor: PRIMARY_COLOR }}
+              className={`w-full h-12 rounded-md disabled:opacity-50 ${buttonStyles.primary}`}
             >
               {isLoading ? "Submitting..." : "Submit"}
             </button>
@@ -315,13 +321,12 @@ const DatePickerComponent = ({ selectedDate, onDateTimeSelect, onClose }) => {
         <button
           key={day}
           onClick={() => setTempSelectedDate(dateStr)}
-          className={`h-8 w-8 rounded-full text-sm font-medium transition-colors ${
-            isSelected
-              ? 'bg-[#FDA92D] text-white'
-              : isToday
+          className={`h-8 w-8 rounded-full text-sm font-medium transition-colors ${isSelected
+            ? 'bg-[#FDA92D] text-white'
+            : isToday
               ? 'bg-orange-100 text-[#FDA92D]'
               : 'hover:bg-orange-50 text-gray-700'
-          }`}
+            }`}
         >
           {day}
         </button>
@@ -386,7 +391,7 @@ const DatePickerComponent = ({ selectedDate, onDateTimeSelect, onClose }) => {
           <div className="text-center mb-3">
             <h4 className="font-semibold text-gray-700">Select Time</h4>
           </div>
-          
+
           <div className="flex justify-center items-center space-x-2 mb-4">
             <select
               value={selectedHour}
@@ -420,17 +425,11 @@ const DatePickerComponent = ({ selectedDate, onDateTimeSelect, onClose }) => {
       )}
 
       {/* Action buttons */}
-      <div className="flex justify-end space-x-2">
-        <button
-          onClick={onClose}
-          className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
-        >
-          Cancel
-        </button>
+      <div className="flex justify-end">
         <button
           onClick={handleConfirm}
           disabled={!tempSelectedDate}
-          className="px-3 py-1 text-sm bg-[#FDA92D] text-white rounded hover:opacity-90 disabled:opacity-50"
+          className="w-full px-3 py-2 text-sm bg-[#FDA92D] text-white rounded hover:opacity-90 disabled:opacity-50"
         >
           Confirm
         </button>

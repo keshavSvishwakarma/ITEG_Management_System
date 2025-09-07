@@ -10,6 +10,7 @@ import ConfirmPlacementModal from "./ConfirmPlacementModal";
 import CreatePostModal from "./CreatePostModal";
 import profile from "../../assets/images/profileImgDummy.jpeg";
 import PageNavbar from "../common-components/navbar/PageNavbar";
+import { buttonStyles } from "../../styles/buttonStyles";
 
 // Capitalize function
 const toTitleCase = (str) =>
@@ -26,7 +27,7 @@ const PlacementReadyStudents = () => {
     refetchOnFocus: false,
   });
   const students = data?.data || [];
-  
+
   // Get admitted students data for Placed Student tab
   const { data: admittedStudents } = useAdmitedStudentsQuery();
 
@@ -90,9 +91,9 @@ const PlacementReadyStudents = () => {
     // 🌐 Tab-specific filtering
     if (activeTab === "Ongoing Interviews") {
       filtered = filtered.filter(
-        (s) => Array.isArray(s.PlacementinterviewRecord) && 
-        s.PlacementinterviewRecord.length > 0 &&
-        !s.PlacementinterviewRecord.some((rec) => rec.status?.toLowerCase() === "selected")
+        (s) => Array.isArray(s.PlacementinterviewRecord) &&
+          s.PlacementinterviewRecord.length > 0 &&
+          !s.PlacementinterviewRecord.some((rec) => rec.status?.toLowerCase() === "selected")
       );
     } else if (activeTab === "Qualified Students") {
       filtered = filtered.filter(
@@ -104,7 +105,8 @@ const PlacementReadyStudents = () => {
           Array.isArray(s.PlacementinterviewRecord) &&
           s.PlacementinterviewRecord.some(
             (rec) => rec.status?.toLowerCase() === "selected"
-          )
+          ) &&
+          !s.placedInfo // Exclude students who are already placed
       );
     } else if (activeTab === "Placed Student") {
       // Use admitted students data for placed students
@@ -146,16 +148,31 @@ const PlacementReadyStudents = () => {
     });
   };
 
-  // Helper function to get latest selected interview details
-  const getSelectedInterviewDetails = (student) => {
+  // Helper function to get latest company info
+  const getLatestCompanyInfo = (student) => {
+    // Check placedInfo first (most recent confirmed placement)
+    if (student.placedInfo?.companyName) {
+      return {
+        companyName: student.placedInfo.companyName,
+        jobProfile: student.placedInfo.jobProfile,
+        isPlaced: true
+      };
+    }
+
+    // Fallback to latest selected interview
     const selectedInterviews = student.PlacementinterviewRecord?.filter(
       (interview) => interview.status?.toLowerCase() === "selected"
     ) || [];
-    
+
     if (selectedInterviews.length === 0) return {};
-    
-    // Return the last selected interview (most recently added to array)
-    return selectedInterviews[selectedInterviews.length - 1];
+
+    const latestInterview = selectedInterviews.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0))[0];
+
+    return {
+      companyName: latestInterview.companyName || latestInterview.company?.companyName || latestInterview.companyRef?.companyName,
+      jobProfile: latestInterview.jobProfile,
+      isPlaced: false
+    };
   };
 
   const columns = activeTab === "Selected Student" ? [
@@ -187,25 +204,21 @@ const PlacementReadyStudents = () => {
       align: "center",
       render: (row) => `+91 ${row.studentMobile}`,
     },
+
     {
       key: "companyName",
       label: "Company",
       render: (row) => {
-        const selectedInterview = getSelectedInterviewDetails(row);
-        // Try multiple ways to get company name
-        const companyName = selectedInterview.companyName || 
-                           selectedInterview.company?.companyName ||
-                           selectedInterview.companyRef?.companyName ||
-                           "N/A";
-        return toTitleCase(companyName);
+        const latestInfo = getLatestCompanyInfo(row);
+        return toTitleCase(latestInfo.companyName || "N/A");
       },
     },
     {
       key: "jobProfile",
       label: "Role",
       render: (row) => {
-        const selectedInterview = getSelectedInterviewDetails(row);
-        return toTitleCase(selectedInterview.jobProfile || "N/A");
+        const latestInfo = getLatestCompanyInfo(row);
+        return toTitleCase(latestInfo.jobProfile || "N/A");
       },
     },
     {
@@ -218,7 +231,7 @@ const PlacementReadyStudents = () => {
             setSelectedStudent(row);
             setIsModalOpen(true);
           }}
-          className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#ED9A21] active:bg-[#B66816] transition relative"
+          className={buttonStyles.primary}
         >
           + Add Interview
         </button>
@@ -234,7 +247,7 @@ const PlacementReadyStudents = () => {
             setSelectedStudentForPlacement(row);
             setIsConfirmPlacementModalOpen(true);
           }}
-          className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#ED9A21] active:bg-[#B66816] transition relative"
+          className={buttonStyles.primary}
         >
           Confirm Placement
         </button>
@@ -300,7 +313,7 @@ const PlacementReadyStudents = () => {
             setSelectedStudentForPost(row);
             setIsCreatePostModalOpen(true);
           }}
-          className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#ED9A21] active:bg-[#B66816] transition relative"
+          className={buttonStyles.primary}
         >
           Create Post
         </button>
@@ -336,10 +349,16 @@ const PlacementReadyStudents = () => {
       render: (row) => `+91 ${row.studentMobile}`,
     },
     {
+      key: "track",
+      label: "Track",
+      render: (row) => toTitleCase(row.track || "N/A"),
+    },
+    {
       key: "techno",
       label: "Technology",
       render: (row) => toTitleCase(row.techno),
     },
+
   ];
 
   const handleTabClick = (tab) => {
@@ -356,7 +375,9 @@ const PlacementReadyStudents = () => {
   }, []);
 
   const handleRowClick = (student) => {
-    if (activeTab === "Ongoing Interviews" || activeTab === "Selected Student") {
+    if (activeTab === "Qualified Students") {
+      navigate(`/student-profile/${student._id}`);
+    } else if (activeTab === "Ongoing Interviews" || activeTab === "Selected Student") {
       navigate(`/interview-history/${student._id}`);
     } else if (activeTab === "Placed Student") {
       navigate(`/student-profile/${student._id}`);
@@ -373,8 +394,8 @@ const PlacementReadyStudents = () => {
 
   return (
     <>
-      <PageNavbar 
-        title="Placement Process" 
+      <PageNavbar
+        title="Placement Process"
         subtitle="Manage student placement workflow and interviews"
         showBackButton={false}
       />
@@ -386,11 +407,10 @@ const PlacementReadyStudents = () => {
               <p
                 key={tab}
                 onClick={() => handleTabClick(tab)}
-                className={`cursor-pointer text-md text-[var(--text-color)] pb-2 border-b-2 ${
-                  activeTab === tab
-                    ? "border-[var(--text-color)] font-semibold"
-                    : "border-gray-200"
-                }`}
+                className={`cursor-pointer text-md text-[var(--text-color)] pb-2 border-b-2 ${activeTab === tab
+                  ? "border-[var(--text-color)] font-semibold"
+                  : "border-gray-200"
+                  }`}
               >
                 {tab}
               </p>
@@ -427,7 +447,7 @@ const PlacementReadyStudents = () => {
                 setSelectedStudent(student);
                 setIsModalOpen(true);
               }}
-              className="bg-[#FDA92D] text-md text-white px-3 py-1 rounded-md hover:bg-[#ED9A21] active:bg-[#B66816] transition relative"
+              className={buttonStyles.primary}
             >
               + Add Interview
             </button>

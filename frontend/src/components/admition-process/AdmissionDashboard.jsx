@@ -21,6 +21,7 @@ import { Chart } from 'react-google-charts';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import PageNavbar from '../common-components/navbar/PageNavbar';
+import AttendanceChart from '../dashboard/AttendanceChart';
 
 // Auto-Swapping Flow Cards Component
 const FlowSwapCard = () => {
@@ -45,7 +46,7 @@ const FlowSwapCard = () => {
     {
       title: 'Placements Module',
       description: 'Control, manage, and monitor placement drives and interview records with full visibility.',
-      icon: <svg className="w-8 h-8" fill="none" stroke="#10B981" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-8 0V6a2 2 0 00-2 2v6" /></svg>, 
+      icon: <svg className="w-8 h-8" fill="none" stroke="#10B981" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>, 
       color: '#10B981',
       // backgroundImage: 
       
@@ -429,6 +430,9 @@ const AdmissionDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Attendance Chart with Fallback */}
+        <AttendanceChart />
 
         {/* Placement Flow - Bottom Row */}
         <div className="grid grid-cols-1 gap-4 sm:gap-8 mb-6 sm:mb-8">

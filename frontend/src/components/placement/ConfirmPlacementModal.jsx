@@ -4,6 +4,7 @@ import { IoClose, IoCloudUploadOutline, IoDocumentTextOutline } from "react-icon
 import { useConfirmPlacementMutation } from "../../redux/api/authApi";
 import { toast } from "react-toastify";
 import CustomDatePicker from "../student-records/CustomDatePicker";
+import { buttonStyles } from "../../styles/buttonStyles";
 
 const PRIMARY_COLOR = "#FDA92D";
 const TEXT_COLOR = "#4B4B4B";
@@ -173,7 +174,7 @@ const ConfirmPlacementModal = ({ isOpen, onClose, student, onSuccess }) => {
                 htmlFor="salary"
                 className="absolute left-3 top-3 text-gray-500 transition-all duration-200 cursor-text peer-focus:-top-2 peer-focus:left-2 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-black peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-black"
               >
-                Salary *
+                Yearly Salary *
               </label>
             </div>
           </div>
@@ -352,8 +353,7 @@ const ConfirmPlacementModal = ({ isOpen, onClose, student, onSuccess }) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-12 rounded-md text-white hover:opacity-90 transition disabled:opacity-50"
-              style={{ backgroundColor: PRIMARY_COLOR }}
+              className={`w-full h-12 rounded-md transition disabled:opacity-50 ${buttonStyles.primary}`}
             >
               {isSubmitting ? "Confirming..." : "Confirm Placement"}
             </button>

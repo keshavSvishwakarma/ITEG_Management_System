@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { useGetAdmittedStudentsByIdQuery, useUpdateStudentImageMutation, useUploadResumeMutation } from "../../redux/api/authApi";
+import { useGetAdmittedStudentsByIdQuery, useUpdateStudentImageMutation, useUploadResumeMutation, useUpdateStudentEmailMutation } from "../../redux/api/authApi";
 import PermissionModal from "./PermissionModal";
 import PlacementModal from "./PlacementModal";
 import Loader from "../common-components/loader/Loader";
@@ -30,6 +30,7 @@ export default function StudentProfile() {
   const { data: studentData, isLoading, isError } = useGetAdmittedStudentsByIdQuery(id);
   const [updateStudentImage] = useUpdateStudentImageMutation();
   const [uploadResume, { isLoading: isResumeUploading }] = useUploadResumeMutation();
+  const [updateStudentEmail, { isLoading: isEmailUpdating }] = useUpdateStudentEmailMutation();
   const [latestLevel, setLatestLevel] = useState("1A");
   const [currentLevel, setCurrentLevel] = useState("1A");
   const [isPermissionModalOpen, setPermissionModalOpen] = useState(false);
@@ -37,9 +38,40 @@ export default function StudentProfile() {
   const [isYearView, setIsYearView] = useState(false);
   const [isTechModalOpen, setTechModalOpen] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
+  const [isEmailModalOpen, setEmailModalOpen] = useState(false);
 
   const fileInputRef = useRef(null);
 
+  // Helper function to get resume URL from various possible field names
+  const getResumeUrl = () => {
+    return studentData?.resumeURL || 
+           studentData?.resume || 
+           studentData?.resumeUrl || 
+           studentData?.resume_url || 
+           null;
+  };
+
+  // Function to handle resume link clicks with error handling
+  const handleResumeView = (e) => {
+    const resumeUrl = getResumeUrl();
+    if (!resumeUrl) {
+      e.preventDefault();
+      toast.error('Resume URL not found');
+      return;
+    }
+    
+    // Test if URL is accessible
+    fetch(resumeUrl, { method: 'HEAD' })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Resume not accessible');
+        }
+      })
+      .catch(error => {
+        console.error('Resume accessibility check failed:', error);
+        toast.error('Resume file may not be accessible. Please try again or contact support.');
+      });
+  };
 
   useEffect(() => {
     if (studentData?.level?.length > 0) {
@@ -92,7 +124,7 @@ export default function StudentProfile() {
     reader.onload = async (e) => {
       try {
         const base64Image = e.target.result;
-        console.log('Uploading image for student ID:', studentData._id);
+        // console.log('Uploading image for student ID:', studentData._id);
 
         // Update student image via RTK Query
         const result = await updateStudentImage({
@@ -146,12 +178,12 @@ export default function StudentProfile() {
         // Remove the data:application/pdf;base64, prefix
         const base64String = base64Data.split(',')[1];
 
-        console.log('Uploading resume:', {
-          studentId: studentData._id,
-          fileName: file.name,
-          fileSize: file.size,
-          base64Length: base64String.length
-        });
+        // console.log('Uploading resume:', {
+        //   studentId: studentData._id,
+        //   fileName: file.name,
+        //   fileSize: file.size,
+        //   base64Length: base64String.length
+        // });
 
         const payload = {
           studentId: studentData._id,
@@ -159,11 +191,15 @@ export default function StudentProfile() {
           fileData: base64String
         };
 
-        console.log('API Payload:', payload);
+        // console.log('API Payload:', payload);
 
-        await uploadResume(payload).unwrap();
+        const result = await uploadResume(payload).unwrap();
+        console.log('Upload result:', result);
 
         toast.success('Resume uploaded successfully!');
+
+        // Clear the file input
+        event.target.value = '';
 
       } catch (error) {
         console.error('Full error object:', error);
@@ -244,7 +280,14 @@ export default function StudentProfile() {
   // Debug student data to check resume field
   console.log('Student Data:', studentData);
   console.log('Resume field:', studentData.resume);
-  console.log('Has resume:', !!studentData.resume);
+  console.log('ResumeURL field:', studentData.resumeURL);
+  console.log('All resume-related fields:', {
+    resume: studentData.resume,
+    resumeURL: studentData.resumeURL,
+    resumeUrl: studentData.resumeUrl,
+    resume_url: studentData.resume_url
+  });
+  console.log('Has resume:', !!(studentData.resume || studentData.resumeURL));
 
   return (
     <div className="min-h-screen bg-white">
@@ -289,22 +332,28 @@ export default function StudentProfile() {
               <button
                 onClick={() => {
                   if (canChooseElective()) {
-                    console.log('Update Technology button clicked');
+                    // console.log('Update Technology button clicked');
                     setTechModalOpen(true);
                   }
                 }}
                 disabled={!canChooseElective()}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg ${canChooseElective()
-                  ? 'bg-[#FDA92D] hover:bg-[#E6941A] hover:shadow-xl hover:scale-105 text-black font-extrabold cursor-pointer'
+                  ? 'bg-[#FDA92D] hover:bg-[#E6941A] hover:shadow-xl hover:scale-105 text-white font-extrabold cursor-pointer'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
                   }`}
               >
                 Choose Elective
               </button>
               <button
+                onClick={() => setEmailModalOpen(true)}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg bg-[#FDA92D] hover:bg-[#E6941A] hover:shadow-xl hover:scale-105 text-white disabled:opacity-50"
+              >
+                Update Email
+              </button>
+              <button
                 onClick={() => document.getElementById('resume-upload').click()}
                 disabled={isResumeUploading}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg bg-[#FDA92D] hover:bg-[#E6941A] hover:shadow-xl hover:scale-105 text-black disabled:opacity-50"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg bg-[#FDA92D] hover:bg-[#E6941A] hover:shadow-xl hover:scale-105 text-white disabled:opacity-50"
               >
                 {isResumeUploading ? 'Uploading...' : 'Upload Resume'}
               </button>
@@ -351,7 +400,7 @@ export default function StudentProfile() {
                   <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 text-white">
                     {studentData.firstName} {studentData.lastName}
                   </h2>
-                  <p className="text-gray-300 mb-3 sm:mb-4 text-xs sm:text-base">Course: {studentData.course || "N/A"} | Level - {currentLevel}</p>
+                  <p className="text-gray-300 mb-3 sm:mb-4 text-xs sm:text-base">Course: {studentData.course || "N/A"} | Level - {currentLevel || "1A"}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6">
                     <ContactCard icon={<svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} label="Email" value={studentData.email} />
                     <ContactCard icon={<svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>} label="Phone" value={studentData.studentMobile || "N/A"} />
@@ -532,7 +581,7 @@ export default function StudentProfile() {
               subtitle="Academic achievements"
               icon={<svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>}
             >
-              <div className="space-y-6">
+              <div className="h-48 sm:h-80 flex flex-col justify-center space-y-6">
                 <ProgressMetric title="Certificates" value="2" total="5" color="#FFAB00" />
                 <ProgressMetric title="Success Rate" value="99" total="100" color="#22C55E" suffix="%" />
                 <ProgressMetric title="Levels Completed" value="6" total="10" color="#8E33FF" />
@@ -550,9 +599,9 @@ export default function StudentProfile() {
             icon={<svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
           >
             <div className="space-y-4">
-              <DetailRow icon={company} label="Company" value={studentData.placedInfo?.companyName} />
-              <DetailRow icon={position} label="Position" value={studentData.placedInfo?.jobProfile} />
-              <DetailRow icon={loca} label="Location" value={studentData.placedInfo?.location} />
+              <DetailRow icon={company} label="Company" value={studentData.placedInfo?.companyName || "Not placed yet"} />
+              <DetailRow icon={position} label="Position" value={studentData.placedInfo?.jobProfile || "Not placed yet"} />
+              <DetailRow icon={loca} label="Location" value={studentData.placedInfo?.location || "Not placed yet"} />
               <DetailRow icon={date} label="Joining Date" value={studentData.placedInfo?.joiningDate ? new Date(studentData.placedInfo.joiningDate).toLocaleDateString() : null} />
             </div>
             {!studentData.placedInfo?.companyName && (
@@ -579,12 +628,12 @@ export default function StudentProfile() {
               <DetailRow
                 icon={permission}
                 label="Reason"
-                value={studentData?.permissionDetails?.remark || "N/A"}
+                value={studentData?.permissionDetails?.remark || "Don't have any reason"}
               />
               <DetailRow
                 icon={permission}
                 label="Approved By"
-                value={studentData?.permissionDetails?.approved_by || "N/A"}
+                value={studentData?.permissionDetails?.approved_by || "No one approved"}
               />
               {studentData?.permissionDetails?.imageURL && (
                 <div className="mt-4">
@@ -615,7 +664,7 @@ export default function StudentProfile() {
             icon={<svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
           >
             <div className="space-y-4">
-              {studentData.resumeURL ? (
+              {getResumeUrl() ? (
                 <div>
                   {/* Resume Header */}
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-t-lg border border-blue-200 border-b-0">
@@ -624,12 +673,12 @@ export default function StudentProfile() {
                         <span className="text-blue-600 text-sm">📄</span>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-blue-900">{studentData.resumeURL.split('/').pop().split('-').slice(1).join('-') || 'Resume.pdf'}</p>
+                        <p className="text-xs font-semibold text-blue-900">{getResumeUrl()?.split('/').pop().split('-').slice(1).join('-') || 'Resume.pdf'}</p>
                         <p className="text-xs text-blue-600">Resume document</p>
                       </div>
                     </div>
                     <a
-                      href={studentData.resumeURL}
+                      href={getResumeUrl()}
                       download
                       className="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded transition-colors flex items-center"
                     >
@@ -647,17 +696,19 @@ export default function StudentProfile() {
                       <p className="text-sm text-blue-700 mb-4">Student&rsquo;s resume has been uploaded successfully</p>
                       <div className="flex gap-3 justify-center">
                         <a
-                          href={studentData.resumeURL}
+                          href={getResumeUrl()}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                          onClick={handleResumeView}
                         >
                           View Resume
                         </a>
                         <a
-                          href={studentData.resumeURL}
+                          href={getResumeUrl()}
                           download
                           className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                          onClick={handleResumeView}
                         >
                           <img src={download} className="w-4 h-4" />
                           Download
@@ -763,6 +814,13 @@ export default function StudentProfile() {
         isOpen={isTechModalOpen}
         onClose={() => setTechModalOpen(false)}
         studentId={studentData._id}
+      />
+      <UpdateEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        studentData={studentData}
+        onUpdate={updateStudentEmail}
+        isLoading={isEmailUpdating}
       />
     </div>
   );
@@ -901,5 +959,116 @@ const StatusBadge = ({ status }) => {
     <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusStyle(status)}`}>
       {status || 'No Status'}
     </span>
+  );
+};
+
+// Update Email Modal Component
+const UpdateEmailModal = ({ isOpen, onClose, studentData, onUpdate, isLoading }) => {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen && studentData) {
+      setEmail(studentData.email || '');
+      setError('');
+    }
+  }, [isOpen, studentData]);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    if (email === studentData.email) {
+      setError('New email must be different from current email');
+      return;
+    }
+
+    try {
+      await onUpdate({ id: studentData._id, email }).unwrap();
+      toast.success('Email updated successfully!');
+      onClose();
+    } catch (err) {
+      console.error('Error updating email:', err);
+      toast.error(err?.data?.message || 'Failed to update email');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl py-4 px-6 w-full max-w-lg relative">
+        <h2 className="text-2xl font-semibold text-center mb-6 text-[var(--primary)]">Update Email</h2>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Current Email
+            </label>
+            <input
+              type="text"
+              value={studentData?.email || ''}
+              disabled
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500"
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              New Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError('');
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
+              placeholder="Enter new email address"
+            />
+            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 bg-[#FDA92D] hover:bg-[#E6941A] text-white rounded-lg disabled:opacity-50"
+            >
+              {isLoading ? 'Updating...' : 'Update Email'}
+            </button>
+          </div>
+        </form>
+        
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-xl text-gray-400 hover:text-gray-700"
+        >
+          &times;
+        </button>
+      </div>
+    </div>
   );
 };

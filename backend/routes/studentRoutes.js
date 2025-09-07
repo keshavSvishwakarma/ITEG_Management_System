@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifyToken, checkRole } = require("../middlewares/authMiddleware");
 const studentController = require("../modules/student/controllers/AdmittedStudentController");
 const placementController = require("../modules/student/controllers/placementController");
+const attendanceController = require("../modules/student/controllers/attendanceController");
 
 const upload = require('../config/multerConfig');
 
@@ -76,12 +77,15 @@ router.patch('/update_technology/:id', studentController.updateTechnology);
 
 router.patch('/update/profile/:id', studentController.updateStudentProfile);
 
+router.patch('/update/email/:id', verifyToken, checkRole(allowedRoles), studentController.updateStudentEmail);
+
 router.patch("/reschedule/interview/:studentId/:interviewId/", studentController.rescheduleInterview);
 
 // router.get('/count/:studentId', studentController.countStudentInterviews);
 
 router.get("/companies/placed_students/:companyId", placementController.getPlacedStudentsByCompany);
 
-
+// Attendance Statistics Route
+router.get("/attendance/stats", verifyToken, checkRole(allowedRoles), attendanceController.getOverallAttendanceStats);
 
 module.exports = router;

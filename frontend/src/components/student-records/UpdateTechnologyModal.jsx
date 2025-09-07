@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { useUpdateTechnologyMutation } from "../../redux/api/authApi";
 import CustomDropdown from "../common-components/common-feild/CustomDropdown";
+import { buttonStyles } from "../../styles/buttonStyles";
 
 const UpdateTechnologyModal = ({ isOpen, onClose, studentId }) => {
     const [updateTechnology, { isLoading }] = useUpdateTechnologyMutation();
@@ -61,9 +62,9 @@ const UpdateTechnologyModal = ({ isOpen, onClose, studentId }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl py-4 px-6 w-full max-w-lg relative">
-                <h2 className="text-xl font-bold text-center text-orange-500 mb-4">Update Technology</h2>
-                
-                <TechnologyForm 
+                <h2 className="text-2xl font-semibold text-center mb-6 text-[var(--primary)]">Update Technology</h2>
+
+                <TechnologyForm
                     initialValues={initialValues}
                     techSchema={techSchema}
                     handleSubmit={handleSubmit}
@@ -73,7 +74,7 @@ const UpdateTechnologyModal = ({ isOpen, onClose, studentId }) => {
                     isLoading={isLoading}
                     onClose={onClose}
                 />
-                
+
                 <button
                     onClick={() => {
                         setShowCustomInput(false);
@@ -89,14 +90,14 @@ const UpdateTechnologyModal = ({ isOpen, onClose, studentId }) => {
 };
 
 // Separate component to handle the form logic
-const TechnologyForm = ({ initialValues, techSchema, handleSubmit, techOptions, showCustomInput, setShowCustomInput, isLoading, onClose }) => {
+const TechnologyForm = ({ initialValues, techSchema, handleSubmit, techOptions, showCustomInput, setShowCustomInput, isLoading }) => {
     return (
         <Formik
             initialValues={initialValues}
             validationSchema={techSchema}
             onSubmit={handleSubmit}
         >
-            {({ values, handleChange, touched, errors, resetForm, setFieldValue }) => {
+            {({ values, handleChange, touched, errors, setFieldValue }) => {
                 // Watch for techno field changes
                 useEffect(() => {
                     setShowCustomInput(values.techno === "Others");
@@ -134,24 +135,13 @@ const TechnologyForm = ({ initialValues, techSchema, handleSubmit, techOptions, 
                                     )}
                                 </div>
                             )}
-                            
-                            {/* Action Buttons */}
-                            <div className="flex justify-center mt-4 gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        resetForm();
-                                        setShowCustomInput(false);
-                                        onClose();
-                                    }}
-                                    className="px-6 py-2 border rounded-lg hover:bg-gray-100 transition"
-                                >
-                                    Cancel
-                                </button>
+
+                            {/* Submit Button */}
+                            <div className="mt-4">
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="bg-[#FDA92D] hover:bg-[#E6941A] text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                    className={`w-full py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${buttonStyles.primary}`}
                                 >
                                     {isLoading ? "Updating..." : "Update"}
                                 </button>
