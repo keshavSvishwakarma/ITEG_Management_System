@@ -16,18 +16,18 @@ pipeline {
                 dir('backend') {
                     script {
                         def containerName = "iteg-backend-container"
-                        def imageName = "iteg-backend:latest"
+                        def imageName = "iteg-backend:latest" // <--- MISTAKE WAS HERE
 
                         echo "--- पुराना कंटेनर रोका और हटाया जा रहा है ---"
                         sh "docker stop ${containerName} || true"
                         sh "docker rm ${containerName} || true"
-                        
+
                         echo "--- नई डॉकर इमेज बनाई जा रही है ---"
                         sh "docker build -t ${imageName} ."
-                        
+
                         echo "--- नया कंटेनर शुरू किया जा रहा है ---"
                         sh "docker run -d --restart unless-stopped -p 5001:5001 --name ${containerName} ${imageName}"
-                        
+
                         echo "--- डिप्लॉयमेंट पूरा हुआ ---"
                     }
                 }
