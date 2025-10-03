@@ -15,8 +15,23 @@ pipeline {
         stage('Build and Deploy Backend') {
             steps {
                 // जेनकिंस को निर्देश दें कि वह 'backend' फोल्डर के अंदर जाए
-                // अगर आपके फोल्डर का नाम कुछ और है, तो उसे यहाँ बदलें
-                dir('backend') { 
+                dir('backend') {
+                    script {
+                        // वेरिएबल बना लो ताकि कोड साफ रहे
+                        def containerName = "iteg-backend-container" // सही कंटेनर नाम
+                        def imageName = "iteg-backend:latest"
+
+                        echo "पुराना कंटेनर रोका और हटाया जा रहा है..."
+                        // || true यह सुनिश्चित करता है कि अगर कंटेनर न मिले तो बिल्ड फेल न हो
+                        sh "docker stop ${containerName} || true"
+                        sh "docker rm ${containerName} || true"
+                        
+                        echo "नई डॉकर इमेज बनाई जा रही है..."
+                        sh "docker build -t ${imageName} ."
+                        
+                        echo "नया कंटेनर शुरू किया जा रहा है..."
+                        sh "docker run -d --restart unless-stopped -p 5001:5001 --name ${containerName} ${imageName}"
+                    }
                 }
             }
         }
