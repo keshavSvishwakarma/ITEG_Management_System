@@ -90,11 +90,7 @@ const StudentAdmissionProcessSchema = new mongoose.Schema(
       isScheduled: { type: Boolean, default: false }
     },
 
-    // Optional: Who created this entry (Admin/Faculty)
-    // createdBy: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: 'User'
-    // }
+    
   },
   { timestamps: true }
 );

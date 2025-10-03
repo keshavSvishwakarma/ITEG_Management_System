@@ -470,6 +470,7 @@ const crypto = require("crypto");
 const { sendResetLinkEmail } = require("../helpers/sendOtp");
 const cloudinary = require("cloudinary").v2;
 const mongoose = require("mongoose");
+const paginate = require('../../../config/paginate');
 
 // 🌩️ Cloudinary Config
 cloudinary.config({
@@ -671,6 +672,19 @@ exports.logout = async (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// 👥 GET ALL USERS
+exports.getAllUsers = async (req, res) => {
+  try {
+    const result = await paginate(User, req.query, {
+      select: '-password -refreshToken -resetPasswordToken'
+    });
+    
+    res.status(200).json(result);
+  } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
