@@ -17,22 +17,6 @@ pipeline {
                 // जेनकिंस को निर्देश दें कि वह 'backend' फोल्डर के अंदर जाए
                 // अगर आपके फोल्डर का नाम कुछ और है, तो उसे यहाँ बदलें
                 dir('backend') { 
-                    script {
-                        // कुछ वेरिएबल बना रहे हैं ताकि कोड साफ रहे
-                        def containerName = "iteg-backend-container"
-                        def imageName = "iteg-backend:latest"
-
-                        echo "पुराना कंटेनर रोका और हटाया जा रहा है..."
-                        sh "docker stop ${containerName} || true"
-                        sh "docker rm ${containerName} || true"
-
-                        echo "नई डॉकर इमेज बनाई जा रही है..."
-                        // '.' का मतलब है 'करंट फोल्डर' (जो कि अब 'backend' है)
-                        sh "docker build -t ${imageName} ."
-
-                        echo "नया कंटेनर शुरू किया जा रहा है..."
-                        sh "docker run -d --restart unless-stopped -p 5001:5001 --name ${containerName} ${imageName}"
-                    }
                 }
             }
         }
