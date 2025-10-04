@@ -3,7 +3,7 @@ pipeline {
     stages {
 
         stage('Build & Deploy Frontend') {
-            when { expression { env.BUILD_FRONTEND == "true" } }
+            // when { expression { env.BUILD_FRONTEND == "true" } }
             steps {
                 dir('frontend') {
                     sh 'docker build -t iteg-frontend .'
@@ -15,7 +15,7 @@ pipeline {
         }
 
         stage('Build & Deploy Backend') {
-            when { expression { env.BUILD_BACKEND == "true" } }
+            // when { expression { env.BUILD_BACKEND == "true" } }
             steps {
                 dir('backend') {
                     sh 'docker build -t iteg-backend .'
