@@ -2,18 +2,6 @@ pipeline {
     agent any
     stages {
 
-        stage('Build & Deploy Frontend') {
-            // when { expression { env.BUILD_FRONTEND == "true" } }
-            steps {
-                dir('frontend') {
-                    sh 'docker build -t iteg-frontend .'
-                    sh 'docker stop iteg-frontend-container || true'
-                    sh 'docker rm iteg-frontend-container || true'
-                    sh 'docker run -d -p 5002:5002 --name iteg-frontend-container iteg-frontend'
-                }
-            }
-        }
-
         stage('Build & Deploy Backend') {
             // when { expression { env.BUILD_BACKEND == "true" } }
             steps {
@@ -25,5 +13,16 @@ pipeline {
                 }
             }
         }
+        stage('Build & Deploy Frontend') {
+            // when { expression { env.BUILD_FRONTEND == "true" } }
+            steps {
+                dir('frontend') {
+                    sh 'docker build -t iteg-frontend .'
+                    sh 'docker stop iteg-frontend-container || true'
+                    sh 'docker rm iteg-frontend-container || true'
+                    sh 'docker run -d -p 5002:5002 --name iteg-frontend-container iteg-frontend'
+                }
+            }
+        }    
     }
 }
