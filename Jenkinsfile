@@ -9,7 +9,7 @@ pipeline {
                     sh 'docker build -t iteg-backend .'
                     sh 'docker stop iteg-backend-container || true'
                     sh 'docker rm iteg-backend-container || true'
-                    sh 'docker run -d -p 5001:5001 --name iteg-backend-container iteg-backend'
+                    sh 'docker run -d -p 5000:5001 --name iteg-backend-container iteg-backend'
                 }
             }
         }
