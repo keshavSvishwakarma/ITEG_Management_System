@@ -1,6 +1,7 @@
 const AdmittedStudent = require("../models/admittedStudent");
 const Company = require("../models/company");
 const cloudinary = require('../../../config/cloudinaryConfig');
+const paginate = require('../../../config/paginate');
 
 // 1. CREATE/SCHEDULE INTERVIEW (from Ready Students) - Using original URL pattern
 exports.createInterview = async (req, res) => {
@@ -130,12 +131,15 @@ exports.addInterviewRound = async (req, res) => {
 // 4. GET SELECTED STUDENTS (Not yet placed)
 exports.getSelectedStudents = async (req, res) => {
   try {
-    const students = await AdmittedStudent.find({
-      "PlacementinterviewRecord.status": "Selected",
-      placedInfo: null
-    }).populate('PlacementinterviewRecord.companyRef');
+    const result = await paginate(AdmittedStudent, req.query, {
+      extraFilter: {
+        "PlacementinterviewRecord.status": "Selected",
+        placedInfo: null
+      },
+      populate: 'PlacementinterviewRecord.companyRef'
+    });
 
-    const selectedStudents = students.map(student => ({
+    const selectedStudents = result.data.map(student => ({
       _id: student._id,
       name: `${student.firstName} ${student.lastName}`,
       course: student.course,
@@ -144,7 +148,11 @@ exports.getSelectedStudents = async (req, res) => {
       )
     }));
 
-    res.json({ success: true, data: selectedStudents });
+    res.json({ 
+      success: true, 
+      data: selectedStudents,
+      meta: result.meta
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -277,11 +285,16 @@ exports.confirmPlacement = async (req, res) => {
 // 6. GET PLACED STUDENTS
 exports.getPlacedStudents = async (req, res) => {
   try {
-    const placedStudents = await AdmittedStudent.find({
-      placedInfo: { $ne: null }
-    }).populate('placedInfo.companyRef');
+    const result = await paginate(AdmittedStudent, req.query, {
+      extraFilter: { placedInfo: { $ne: null } },
+      populate: 'placedInfo.companyRef'
+    });
 
-    res.json({ success: true, data: placedStudents });
+    res.json({ 
+      success: true, 
+      data: result.data,
+      meta: result.meta
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -475,12 +488,12 @@ exports.createPlacementPost = async (req, res) => {
 
 exports.getAllCompanies = async (req, res) => {
   try {
-    // Fetch all companies with all schema fields
-    const companies = await Company.find();  
+    const result = await paginate(Company, req.query);
 
     res.status(200).json({
       success: true,
-      data: companies
+      data: result.data,
+      meta: result.meta
     });
   } catch (error) {
     console.error("Error fetching companies:", error);

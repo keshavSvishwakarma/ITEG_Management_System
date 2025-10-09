@@ -5,6 +5,7 @@ const { sendHTMLMail } = require("./emailController");
 
 const { sendEmail } = require('./emailController');
 const cloudinary = require('../../../config/cloudinaryConfig');
+const paginate = require('../../../config/paginate');
 
 const path = require('path');
 const fs = require('fs');
@@ -94,17 +95,22 @@ exports.createAdmittedStudent = async (req, res) => {
   }
 };
 
+// const paginate = require('../../../config/paginate');
+
 exports.getAllStudents = async (req, res) => {
   try {
-    const students = await AdmittedStudent.find({
-      $or: [
-        { permissionDetails: { $exists: false } },
-        { permissionDetails: null },
-        { permissionDetails: {} }
-      ]
-    }).sort({ updatedAt: -1 });
-    console.log("Fetched all students:", students.length);
-    res.status(200).json(students);
+    const result = await paginate(AdmittedStudent, req.query, {
+      extraFilter: {
+        $or: [
+          { permissionDetails: { $exists: false } },
+          { permissionDetails: null },
+          { permissionDetails: {} }
+        ]
+      },
+      select: 'firstName lastName email course stream readinessStatus level permissionDetails'
+    });
+    
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -112,25 +118,19 @@ exports.getAllStudents = async (req, res) => {
 
 
 exports.getAllStudentsByLevel = async (req, res) => {
-  // try {
-  //   const { levelNo } = req.params;
-  //   console.log("Fetching students for level:", levelNo);
-  //   const students = await AdmittedStudent.find({ level: levelNo });
-  //   res.status(200).json(students);
-  // } catch (error) {
-  //   console.error("Error fetching students by level:", error);
-  //   res.status(500).json({ message: error.message });
-  // }
   try {
     const { levelNo } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-const students = await AdmittedStudent.aggregate([
-  {
-    $addFields: {
-      latestLevel: { $arrayElemAt: ["$level", -1] }
-    }
-  },
-  {
+    const students = await AdmittedStudent.aggregate([
+      {
+        $addFields: {
+          latestLevel: { $arrayElemAt: ["$level", -1] }
+        }
+      },
+      {
         $match: {
           "latestLevel.levelNo": levelNo,
           $or: [
@@ -138,18 +138,51 @@ const students = await AdmittedStudent.aggregate([
             { permissionDetails: null },
             { permissionDetails: {} }
           ]
-    }
-  },
-  {
-    $sort: { updatedAt: -1 }
-  }
-]);
+        }
+      },
+      {
+        $sort: { updatedAt: -1 }
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      }
+    ]);
 
-    if (!students || students.length === 0) {
-      return res.status(404).json({ message: "No students found for this level" });
-    }
+    const totalCount = await AdmittedStudent.aggregate([
+      {
+        $addFields: {
+          latestLevel: { $arrayElemAt: ["$level", -1] }
+        }
+      },
+      {
+        $match: {
+          "latestLevel.levelNo": levelNo,
+          $or: [
+            { permissionDetails: { $exists: false } },
+            { permissionDetails: null },
+            { permissionDetails: {} }
+          ]
+        }
+      },
+      {
+        $count: "total"
+      }
+    ]);
 
-    res.status(200).json(students);
+    const total = totalCount[0]?.total || 0;
+
+    res.status(200).json({
+      data: students,
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     console.error("Error fetching students by latest level:", error);
     res.status(500).json({ message: "Server Error", error });
@@ -473,28 +506,64 @@ exports.getStudentLevels = async (req, res) => {
 exports.getLevelWiseStudents = async (req, res) => {
   try {
     const { levelNo } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-  const students = await AdmittedStudent.aggregate([
-  {
-    $match: {
-      currentLevel: levelNo,
-      $or: [
-        { permissionDetails: { $exists: false } },
-        { permissionDetails: null },
-        { permissionDetails: {} }
-      ]
-    }
-  },
-  {
-    $sort: { updatedAt: -1 }
-  }
-]);
+    const students = await AdmittedStudent.aggregate([
+      {
+        $match: {
+          currentLevel: levelNo,
+          $or: [
+            { permissionDetails: { $exists: false } },
+            { permissionDetails: null },
+            { permissionDetails: {} }
+          ]
+        }
+      },
+      {
+        $sort: { updatedAt: -1 }
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      }
+    ]);
+
+    const totalCount = await AdmittedStudent.aggregate([
+      {
+        $match: {
+          currentLevel: levelNo,
+          $or: [
+            { permissionDetails: { $exists: false } },
+            { permissionDetails: null },
+            { permissionDetails: {} }
+          ]
+        }
+      },
+      {
+        $count: "total"
+      }
+    ]);
+
+    const total = totalCount[0]?.total || 0;
 
     if (!students || students.length === 0) {
       return res.status(404).json({ message: "No students found for this level" });
     }
 
-    res.status(200).json(students);
+    res.status(200).json({
+      students,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalStudents: total,
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      }
+    });
   } catch (error) {
     console.error("Error fetching students by latest level:", error);
     res.status(500).json({ message: "Server Error", error });
@@ -571,8 +640,16 @@ exports.updateAdmittedStudent = async (req, res) => {
 
 exports.getReadyStudent = async (req, res) => {
   try {
-    // Find all students whose readinessStatus is "Ready"
-    const readyStudents = await AdmittedStudent.find({ readinessStatus: 'Ready' }).sort({ updatedAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const readyStudents = await AdmittedStudent.find({ readinessStatus: 'Ready' })
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await AdmittedStudent.countDocuments({ readinessStatus: 'Ready' });
 
     if (readyStudents.length === 0) {
       return res.status(404).json({ message: "No students found with readinessStatus 'Ready'." });
@@ -581,6 +658,13 @@ exports.getReadyStudent = async (req, res) => {
     return res.status(200).json({
       message: 'Ready students fetched successfully.',
       data: readyStudents,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalStudents: total,
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      }
     });
 
   } catch (error) {
