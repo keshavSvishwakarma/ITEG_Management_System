@@ -5,6 +5,7 @@ import { useEffect, useState, useMemo } from "react";
 import CustomTimeDate from "./CustomTimeDate";
 import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../common-components/pagination/Pagination";
+import BackendPagination from "../common-components/pagination/BackendPagination";
 import { AiFillStop } from "react-icons/ai";
 import { FaCheckCircle } from "react-icons/fa";
 import Loader from "../common-components/loader/Loader";
@@ -28,17 +29,17 @@ const toTitleCase = (str) =>
     .join(" ");
 
 const StudentList = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
   const { data = [], isLoading, error, refetch } = useGetAllStudentsQuery(
-    { page: 1, limit: 1000 }, // Get all data with high limit
+    { page: currentPage, limit: itemsPerPage, search: searchTerm },
     {
       refetchOnMountOrArgChange: true,
       refetchOnFocus: true,
     }
   );
-
-
-  const [rowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("Total Registration");
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [atemendNumber, setAtemendNumber] = useState(null);
@@ -171,6 +172,11 @@ const StudentList = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [refetch]);
 
+  // Reset page when search term or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, trackFilterTab1, resultFilterTab2, statusFilterTab3, activeTab]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -237,7 +243,7 @@ const StudentList = () => {
     }
   };
 
-  const filteredData = (data?.data || []).filter((student) => {
+  const allFilteredData = (data?.data || []).filter((student) => {
     const searchableValues = Object.values(student)
       .map((val) => String(val ?? "").toLowerCase())
       .join(" ");
@@ -286,6 +292,11 @@ const StudentList = () => {
 
     return matches && matchTabCondition(student);
   });
+
+  // Paginate the filtered data
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const filteredData = allFilteredData.slice(startIndex, endIndex);
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
@@ -667,32 +678,63 @@ const StudentList = () => {
               </p>
             ))}
           </div>
-          <div className="flex justify-between items-center flex-wrap gap-4">
-            <Pagination
-              rowsPerPage={rowsPerPage}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filtersConfig={filtersConfig}
-              filteredData={filteredData}
-              selectedRows={selectedRows}
-              allData={data}
-              sectionName={activeTab.replace(/\s+/g, '').toLowerCase()}
-            />
+
+          {/* Search and Filters */}
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between py-4">
+            <div className="flex-1 max-w-md">
+              <input
+                type="text"
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            {filtersConfig.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {filtersConfig.map(({ title, options, selected, setter }) => (
+                  <div key={title} className="relative">
+                    <select
+                      multiple
+                      value={selected}
+                      onChange={(e) => {
+                        const values = Array.from(e.target.selectedOptions, option => option.value);
+                        setter(values);
+                      }}
+                      className="min-w-[120px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                    >
+                      <option value="" disabled>
+                        {title} ({selected.length})
+                      </option>
+                      {options.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <CommonTable
           data={filteredData}
           columns={columns}
-          editable={!!actionButton}
-          pagination={true}
-          rowsPerPage={rowsPerPage}
-          searchTerm={searchTerm}
           actionButton={actionButton}
-          onSelectionChange={setSelectedRows}
           onRowClick={(row) => {
             localStorage.setItem("lastSection", "admission");
             navigate(`/admission/edit/${row._id}`, { state: { student: row } });
           }}
+        />
+        
+        <BackendPagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(allFilteredData.length / itemsPerPage) || 1}
+          totalItems={allFilteredData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
       {isModalOpen && selectedStudentId && (

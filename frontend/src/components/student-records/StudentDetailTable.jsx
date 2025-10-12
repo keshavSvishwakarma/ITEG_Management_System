@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../common-components/pagination/Pagination";
+import BackendPagination from "../common-components/pagination/BackendPagination";
 import {
   useAdmitedStudentsQuery,
 } from "../../redux/api/authApi";
@@ -13,8 +14,11 @@ import PageNavbar from "../common-components/navbar/PageNavbar";
 import { buttonStyles } from "../../styles/buttonStyles";
 
 const StudentDetailTable = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
   const { data = [], isLoading, refetch } = useAdmitedStudentsQuery(
-    { limit: 1000 },
+    { page: currentPage, limit: itemsPerPage },
     {
       refetchOnMountOrArgChange: true,
       refetchOnFocus: true,
@@ -23,8 +27,7 @@ const StudentDetailTable = () => {
   const location = useLocation();
   const selectedLevel = location.state?.level || "1A"; // Default to 1A if no level is selected
   const navigate = useNavigate();
-  const [rowsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -299,40 +302,26 @@ const StudentDetailTable = () => {
             ))}
           </div>
 
-          <div className="flex justify-between items-center flex-wrap gap-4 mt-4">
-            <Pagination
-              rowsPerPage={rowsPerPage}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filtersConfig={filtersConfig}
-              filteredData={filteredData}
-              selectedRows={selectedRows}
-              allData={data}
-              sectionName={activeTab === "Level's Cleared" ? "levelscleared" : `level${selectedLevel}`}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              totalItems={data?.meta?.total || filteredData.length}
-            />
-          </div>
+
         </div>
 
         <CommonTable
-          data={filteredData}
+          data={currentData}
           columns={columns}
-          editable={true}
-          pagination={true}
-          rowsPerPage={rowsPerPage}
-          searchTerm={searchTerm}
           actionButton={selectedLevel === "permission" || activeTab === "Level's Cleared" ? null : actionButton}
-          onSelectionChange={setSelectedRows}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalItems={data?.meta?.total || filteredData.length}
           onRowClick={(row) => {
             // Set the source section to 'admitted' before navigating
             localStorage.setItem("lastSection", "admitted");
             navigate(`/student-profile/${row._id}`, { state: { student: row } });
           }}
+        />
+        
+        <BackendPagination
+          currentPage={currentPage}
+          totalPages={data?.meta?.pages || 1}
+          totalItems={data?.meta?.total || 0}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
       </div>
 

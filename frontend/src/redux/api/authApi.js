@@ -222,10 +222,20 @@ export const authApi = createApi({
 
     // get the students for admission process
     getAllStudents: builder.query({
-      query: () => ({
-        url: '/admission/students/getall',
-        method: "GET",
-      }),
+      query: (params = {}) => {
+        const { page = 1, limit = 10, search, ...filters } = params;
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page);
+        queryParams.append('limit', limit);
+        if (search) queryParams.append('search', search);
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) queryParams.append(key, value);
+        });
+        return {
+          url: `/admission/students/getall?${queryParams.toString()}`,
+          method: "GET",
+        };
+      },
       providesTags: ['Student'],
       keepUnusedDataFor: 300, // 5 minutes cache
     }),
@@ -273,10 +283,20 @@ export const authApi = createApi({
 
     // get all the students for admitted process
     admitedStudents: builder.query({
-      query: () => ({
-        url: '/admitted/students/getall',
-        method: "GET",
-      }),
+      query: (params = {}) => {
+        const { page = 1, limit = 10, search, ...filters } = params;
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page);
+        queryParams.append('limit', limit);
+        if (search) queryParams.append('search', search);
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) queryParams.append(key, value);
+        });
+        return {
+          url: `/admitted/students/getall?${queryParams.toString()}`,
+          method: "GET",
+        };
+      },
       providesTags: ['Student'],
       keepUnusedDataFor: 300, // 5 minutes cache
     }),
