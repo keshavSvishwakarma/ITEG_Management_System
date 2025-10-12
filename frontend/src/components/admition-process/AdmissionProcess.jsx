@@ -28,10 +28,15 @@ const toTitleCase = (str) =>
     .join(" ");
 
 const StudentList = () => {
-  const { data = [], isLoading, error, refetch } = useGetAllStudentsQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-    refetchOnFocus: true,
-  });
+  const { data = [], isLoading, error, refetch } = useGetAllStudentsQuery(
+    { page: 1, limit: 1000 }, // Get all data with high limit
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    }
+  );
+
+
   const [rowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("Total Registration");
@@ -60,17 +65,19 @@ const StudentList = () => {
 
   // dynamic unique options across data
   const dynamicTrackOptions = useMemo(() => {
-    return [...new Set(data.map((s) => toTitleCase(s.track || "")))].filter(
+    const students = data?.data || [];
+    return [...new Set(students.map((s) => toTitleCase(s.track || "")))].filter(
       Boolean
     );
   }, [data]);
 
   const dynamicResultOptions = useMemo(() => {
-    const onlineResults = data.map((s) =>
+    const students = data?.data || [];
+    const onlineResults = students.map((s) =>
       toTitleCase(s.onlineTest?.result || "Not Attempted")
     );
 
-    const interviewResults = data.flatMap(
+    const interviewResults = students.flatMap(
       (s) => s.interviews?.map((i) => toTitleCase(i.result || "")) || []
     );
 
@@ -192,7 +199,7 @@ const StudentList = () => {
       resetForm();
       await refetch();
     } catch (err) {
-      toast.error(err?.data?.message || "Failed to create interview");
+      toast.error(err?.data?.data.message || "Failed to create interview");
     }
   };
 
@@ -230,7 +237,7 @@ const StudentList = () => {
     }
   };
 
-  const filteredData = data.filter((student) => {
+  const filteredData = (data?.data || []).filter((student) => {
     const searchableValues = Object.values(student)
       .map((val) => String(val ?? "").toLowerCase())
       .join(" ");

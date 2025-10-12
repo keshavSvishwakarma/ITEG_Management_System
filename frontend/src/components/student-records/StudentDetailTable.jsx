@@ -13,11 +13,18 @@ import PageNavbar from "../common-components/navbar/PageNavbar";
 import { buttonStyles } from "../../styles/buttonStyles";
 
 const StudentDetailTable = () => {
-  const { data = [], isLoading, refetch } = useAdmitedStudentsQuery();
+  const { data = [], isLoading, refetch } = useAdmitedStudentsQuery(
+    { limit: 1000 },
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    }
+  );
   const location = useLocation();
   const selectedLevel = location.state?.level || "1A"; // Default to 1A if no level is selected
   const navigate = useNavigate();
   const [rowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -61,11 +68,13 @@ const StudentDetailTable = () => {
 
   // Dynamic options from data
   const dynamicTrackOptions = useMemo(() => {
-    return [...new Set(data.map((s) => toTitleCase(s.track || "")))].filter(Boolean);
+    const students = data?.data || [];
+    return [...new Set(students.map((s) => toTitleCase(s.track || "")))].filter(Boolean);
   }, [data]);
 
   const dynamicCourseOptions = useMemo(() => {
-    return [...new Set(data.map((s) => (s.course || "").toUpperCase()))].filter(Boolean);
+    const students = data?.data || [];
+    return [...new Set(students.map((s) => (s.course || "").toUpperCase()))].filter(Boolean);
   }, [data]);
 
   const [selectedCourses, setSelectedCourses] = useState([]);
@@ -106,8 +115,12 @@ const StudentDetailTable = () => {
   ];
 
   // Use regular admitted students data
-  const currentData = data;
+  const currentData = data?.data || [];
   const currentLoading = isLoading;
+  
+  // Debug: Check data
+  console.log('Current Data:', currentData);
+  console.log('Current Data Length:', currentData.length);
 
   const enhancedData = currentData.map((student) => {
     // Get all level attempts grouped by levelNo
@@ -160,24 +173,20 @@ const StudentDetailTable = () => {
       });
     }
 
-    // Level filter
-    let matchesLevel;
+    // Level filter - show all students for now since currentLevel is not in response
+    let matchesLevel = true;
     if (activeTab === "Level's Cleared") {
       // Show students who have passed Level 2C
       const level2CAttempts = student.levelAttempts?.["2C"] || [];
       matchesLevel = level2CAttempts.some(lvl => lvl.result === "Pass");
-    } else if (selectedLevel === "2C") {
-      // For Level 2C tab, exclude students who have passed Level 2C
-      const level2CAttempts = student.levelAttempts?.["2C"] || [];
-      const hasPassedLevel2C = level2CAttempts.some(lvl => lvl.result === "Pass");
-      matchesLevel = student.currentLevel === selectedLevel && !hasPassedLevel2C;
-    } else {
-      // For other tabs, show students whose current level matches the selected tab
-      matchesLevel = student.currentLevel === selectedLevel;
     }
 
     return matchesTrack && matchesCourse && matchesAttempts && matchesLevel;
   });
+  
+  // Debug: Check filtered data
+  console.log('Filtered Data:', filteredData);
+  console.log('Filtered Data Length:', filteredData.length);
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
@@ -300,6 +309,9 @@ const StudentDetailTable = () => {
               selectedRows={selectedRows}
               allData={data}
               sectionName={activeTab === "Level's Cleared" ? "levelscleared" : `level${selectedLevel}`}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalItems={data?.meta?.total || filteredData.length}
             />
           </div>
         </div>
@@ -313,6 +325,9 @@ const StudentDetailTable = () => {
           searchTerm={searchTerm}
           actionButton={selectedLevel === "permission" || activeTab === "Level's Cleared" ? null : actionButton}
           onSelectionChange={setSelectedRows}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalItems={data?.meta?.total || filteredData.length}
           onRowClick={(row) => {
             // Set the source section to 'admitted' before navigating
             localStorage.setItem("lastSection", "admitted");
