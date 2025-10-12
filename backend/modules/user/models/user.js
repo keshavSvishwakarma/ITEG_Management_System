@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { VALID_DEPARTMENTS } = require('../../../config/departments');
 // const Admin = require('../modules/Admin/models/adminmodels');
 
 const UserSchema = new mongoose.Schema({
@@ -10,7 +11,12 @@ const UserSchema = new mongoose.Schema({
   adharCard: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, default: 'admin' },
-  department: { type: String, required: true },
+  department: { 
+    type: String, 
+    required: true,
+    enum: VALID_DEPARTMENTS,
+    default: 'ITEG'
+  },
   refreshToken: { type: String }, 
   resetPasswordToken: { type: String }, 
   resetPasswordExpires: { type: Date },

@@ -29,6 +29,7 @@ const protectedRoutes = require("./routes/protectedRoutes");
 const admittedStudentRoutes = require("./routes/studentRoutes");
 const userRoutes = require("./routes/userRoutes.js");
 const otpRoutes = require("./routes/otpRoutes.js");
+const departmentRoutes = require("./routes/departmentRoutes.js");
 const passport = require("./config/passport.js");
 
 
@@ -57,6 +58,9 @@ app.use("/api/protected", protectedRoutes);
 
 // user routes
 app.use("/api/user", userRoutes);
+
+// department routes
+app.use("/api/departments", departmentRoutes);
 
 // admission process routes
 app.use("/api/admission/students", studentAdmissionRoutes);
