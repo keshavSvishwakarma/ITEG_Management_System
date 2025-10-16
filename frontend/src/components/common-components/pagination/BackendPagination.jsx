@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 const BackendPagination = ({
   currentPage,
@@ -54,7 +54,7 @@ const BackendPagination = ({
           disabled={currentPage === 1}
           className="p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4 rotate-180" />
         </button>
 
         {getVisiblePages().map((page, index) => (

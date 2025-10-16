@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from "react";
 import CustomTimeDate from "./CustomTimeDate";
 import { useLocation, useNavigate } from "react-router-dom";
 import Pagination from "../common-components/pagination/Pagination";
-import BackendPagination from "../common-components/pagination/BackendPagination";
+import SearchAndFilters from "../common-components/search-filters/SearchAndFilters";
 import { AiFillStop } from "react-icons/ai";
 import { FaCheckCircle } from "react-icons/fa";
 import Loader from "../common-components/loader/Loader";
@@ -32,7 +32,7 @@ const StudentList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
+
   const { data = [], isLoading, error, refetch } = useGetAllStudentsQuery(
     { page: currentPage, limit: itemsPerPage, search: searchTerm },
     {
@@ -160,7 +160,7 @@ const StudentList = () => {
     } else if (savedTab) {
       setActiveTab(savedTab);
     }
-    
+
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
   }, [location.search, refetch]);
@@ -195,7 +195,7 @@ const StudentList = () => {
       (a, b) => new Date(b.date) - new Date(a.date)
     )[0]?.result;
   };
-  
+
   const handleInterviewSubmit = async (values, { resetForm }) => {
     try {
       const response = await createInterview({ ...values, studentId: id }).unwrap();
@@ -269,7 +269,7 @@ const StudentList = () => {
           const secondRound = student.interviews?.filter((i) => i.round === "Second") || [];
           const isSelected = secondRound.some((i) => i.result === "Pass");
           const isRejected = latestResult === "Fail" || secondRound.some((i) => i.result === "Fail");
-          
+
           if (selected.includes("Selected") && isSelected) return true;
           if (selected.includes("Rejected") && isRejected) return true;
           return false;
@@ -293,10 +293,7 @@ const StudentList = () => {
     return matches && matchTabCondition(student);
   });
 
-  // Paginate the filtered data
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const filteredData = allFilteredData.slice(startIndex, endIndex);
+  const filteredData = allFilteredData;
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
@@ -387,6 +384,7 @@ const StudentList = () => {
 
   let columns = [];
   let actionButton;
+
 
   switch (activeTab) {
     case "Online Assessment":
@@ -530,7 +528,7 @@ const StudentList = () => {
       actionButton = (row) => {
         const userRole = localStorage.getItem('role');
         const isSuperAdmin = userRole === 'superadmin';
-        
+
         return (
           <div className="flex items-center gap-4">
             <button
@@ -541,11 +539,10 @@ const StudentList = () => {
                 }
               }}
               disabled={!isSuperAdmin}
-              className={`text-md ${
-                isSuperAdmin 
+              className={`text-md ${isSuperAdmin
                   ? buttonStyles.primary + ' cursor-pointer'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed px-3 py-1 rounded-md transition'
-              }`}
+                }`}
             >
               Take Interview
             </button>
@@ -657,8 +654,8 @@ const StudentList = () => {
 
   return (
     <>
-      <PageNavbar 
-        title="Admission Process" 
+      <PageNavbar
+        title="Admission Process"
         subtitle="Manage student admission workflow and interviews"
         showBackButton={false}
       />
@@ -679,45 +676,14 @@ const StudentList = () => {
             ))}
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between py-4">
-            <div className="flex-1 max-w-md">
-              <input
-                type="text"
-                placeholder="Search students..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            {filtersConfig.length > 0 && (
-              <div className="flex flex-wrap gap-3">
-                {filtersConfig.map(({ title, options, selected, setter }) => (
-                  <div key={title} className="relative">
-                    <select
-                      multiple
-                      value={selected}
-                      onChange={(e) => {
-                        const values = Array.from(e.target.selectedOptions, option => option.value);
-                        setter(values);
-                      }}
-                      className="min-w-[120px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                    >
-                      <option value="" disabled>
-                        {title} ({selected.length})
-                      </option>
-                      {options.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <SearchAndFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filtersConfig={filtersConfig}
+            allData={data?.data || []}
+            selectedRows={selectedRows}
+            sectionName="admission-process"
+          />
         </div>
         <CommonTable
           data={filteredData}
@@ -729,13 +695,15 @@ const StudentList = () => {
           }}
         />
         
-        <BackendPagination
+        <Pagination
           currentPage={currentPage}
-          totalPages={Math.ceil(allFilteredData.length / itemsPerPage) || 1}
-          totalItems={allFilteredData.length}
+          totalPages={data?.meta?.pages || 1}
+          totalItems={data?.meta?.total || 0}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
         />
+
+
       </div>
       {isModalOpen && selectedStudentId && (
         <CustomTimeDate
@@ -781,14 +749,14 @@ const StudentList = () => {
                     ]}
                   />
                   <div className="col-span-2 mt-4">
-                                <button 
-                                    type="submit" 
-                                    disabled={isLoading} 
-                                    className={`w-full py-3 rounded-lg disabled:opacity-50 ${buttonStyles.primary}`}
-                                >
-                                    {isLoading ? "Submitting..." : "Submit"}
-                                </button>
-                            </div>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`w-full py-3 rounded-lg disabled:opacity-50 ${buttonStyles.primary}`}
+                    >
+                      {isLoading ? "Submitting..." : "Submit"}
+                    </button>
+                  </div>
                 </Form>
               )}
             </Formik>

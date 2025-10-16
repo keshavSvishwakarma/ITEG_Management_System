@@ -1,240 +1,94 @@
 // File: components/Pagination.jsx
 /* eslint-disable react/prop-types */
-import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, ChevronRight } from "lucide-react";
-import { FaFilter } from "react-icons/fa";
-import { BsFillCloudDownloadFill } from "react-icons/bs";
-
-import {
-  downloadCSV,
-  downloadExcel,
-  downloadPDF,
-  toggleSelection,
-} from "../../../helpers/DownloadHelpers";
+import { ChevronRight } from "lucide-react";
 
 const Pagination = ({
-  searchTerm,
-  setSearchTerm,
-  filtersConfig,
-  allData = [],
-  selectedRows = [],
-  sectionName = "data",
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
+  itemsPerPage = 10,
+  onPageChange,
 }) => {
-  const [showFilter, setShowFilter] = useState(false);
-  const [downloadDropdown, setDownloadDropdown] = useState(false);
-  const [expandedSection, setExpandedSection] = useState(null);
+  const getVisiblePages = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
 
-  const filterRef = useRef(null);
-  const downloadRef = useRef(null);
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
 
-  // ✅ Search logic (skip number fields)
-  const filteredData = useMemo(() => {
-    if (!searchTerm) return allData;
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, "...");
+    } else {
+      rangeWithDots.push(1);
+    }
 
-    return allData.filter((row) =>
-      Object.values(row).some((val) => {
-        if (val == null) return false;
+    rangeWithDots.push(...range);
 
-        // 🚫 Ignore numbers (roll no, phone, ids etc.)
-        if (typeof val === "number") return false;
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push("...", totalPages);
+    } else {
+      rangeWithDots.push(totalPages);
+    }
 
-        // ✅ Match only string fields
-        return String(val).toLowerCase().includes(searchTerm.toLowerCase());
-      })
-    );
-  }, [allData, searchTerm]);
+    return rangeWithDots;
+  };
 
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!filterRef.current?.contains(e.target)) setShowFilter(false);
-      if (!downloadRef.current?.contains(e.target))
-        setDownloadDropdown(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex items-center w-full py-5 flex-wrap gap-4 relative">
-      {/* Search Box */}
-      <div className="flex border border-gray-300 rounded-md overflow-hidden w-full max-w-3xl h-12 bg-[var(--backgroundColor)] relative focus-within:border-black transition-colors">
-        <div className="flex items-center px-3 w-full">
-          <Search className="w-4 h-4 text-gray-600 flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="outline-none border-none ring-0 focus:ring-0 px-2 py-2 w-full h-9 text-sm text-gray-600 bg-[var(--backgroundColor)]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        {/* Overlay to focus input on click */}
-        <div
-          className="absolute inset-0 cursor-text"
-          onClick={() =>
-            document.querySelector('input[type="text"]').focus()
-          }
-        ></div>
-      </div>
-
-      {/* Filters & Export Buttons */}
-      <div className="flex items-center gap-10">
-        {/* Filters */}
-        <button
-          onClick={() => setShowFilter(!showFilter)}
-          className="flex items-center text-md gap-1 text-gray-700 hover:text-black"
-        >
-          <FaFilter />
-          Filters
-        </button>
-
-        {/* Export */}
-        <div className="relative" ref={downloadRef}>
-          <button
-            onClick={() => setDownloadDropdown(!downloadDropdown)}
-            className="flex items-center gap-1 text-md text-gray-700 hover:text-black"
-          >
-            <BsFillCloudDownloadFill className="text-md" />
-            Export
-          </button>
-          {downloadDropdown && (
-            <div
-              className="absolute top-10 left-0 border rounded-xl shadow-lg w-40 z-[9999]"
-              style={{
-                background: `
-                  linear-gradient(to bottom left, rgba(173, 216, 230, 0.4) 0%, transparent 40%),
-                  linear-gradient(to top right, rgba(255, 182, 193, 0.4) 0%, transparent 40%),
-                  white
-                `,
-              }}
+    <>
+      {/* Backend Pagination Controls */}
+      {totalPages > 1 && onPageChange && (
+        <div className="flex items-center justify-between px-6 py-3 bg-white border-t">
+          <div className="flex items-center text-sm text-gray-700">
+            Showing {startItem} to {endItem} of {totalItems} results
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                onClick={() => {
-                  const dataToExport =
-                    selectedRows.length > 0
-                      ? allData.filter((row) =>
-                        selectedRows.includes(row._id)
-                      )
-                      : filteredData;
-                  downloadCSV(dataToExport, `${sectionName}.csv`);
-                  setDownloadDropdown(false);
-                }}
-              >
-                Download CSV
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                onClick={() => {
-                  const dataToExport =
-                    selectedRows.length > 0
-                      ? allData.filter((row) =>
-                        selectedRows.includes(row._id)
-                      )
-                      : filteredData;
-                  downloadExcel(dataToExport, `${sectionName}.xlsx`);
-                  setDownloadDropdown(false);
-                }}
-              >
-                Download Excel
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                onClick={() => {
-                  const dataToExport =
-                    selectedRows.length > 0
-                      ? allData.filter((row) =>
-                        selectedRows.includes(row._id)
-                      )
-                      : filteredData;
-                  downloadPDF(dataToExport, `${sectionName}.pdf`);
-                  setDownloadDropdown(false);
-                }}
-              >
-                Download PDF
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+              <ChevronRight className="w-4 h-4 rotate-180" />
+            </button>
 
-      {/* Filter Dropdown */}
-      {showFilter && (
-        <div
-          ref={filterRef}
-          className="absolute top-16 left-[40vw] border rounded-xl shadow-lg w-48 z-[9999] p-2 text-sm"
-          style={{
-            background: `
-              linear-gradient(to bottom left, rgba(173, 216, 230, 0.4) 0%, transparent 20%),
-              linear-gradient(to top right, rgba(255, 182, 193, 0.4) 0%, transparent 20%),
-              white
-            `,
-          }}
-        >
-          {filtersConfig.map(({ title, options, selected, setter }) => (
-            <div key={title} className="relative">
-              <div
-                onClick={() =>
-                  setExpandedSection(
-                    expandedSection === title ? null : title
-                  )
-                }
-                className="flex justify-between items-center cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+            {getVisiblePages().map((page, index) => (
+              <button
+                key={index}
+                onClick={() => typeof page === "number" && onPageChange(page)}
+                disabled={page === "..."}
+                className={`px-3 py-2 text-sm rounded-md ${
+                  page === currentPage
+                    ? "bg-blue-600 text-white"
+                    : page === "..."
+                    ? "text-gray-400 cursor-default"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                }`}
               >
-                <span>{title}</span>
-                <ChevronRight
-                  size={14}
-                  className={
-                    expandedSection === title ? "rotate-90" : ""
-                  }
-                />
-              </div>
+                {page}
+              </button>
+            ))}
 
-              {expandedSection === title && (
-                <div
-                  className="absolute top-0 left-full ml-2 w-44 border rounded-xl shadow-lg p-2 space-y-1 z-[9999]"
-                  style={{
-                    background: `
-                      linear-gradient(to bottom left, rgba(173, 216, 230, 0.4) 0%, transparent 40%),
-                      linear-gradient(to top right, rgba(255, 182, 193, 0.4) 0%, transparent 40%),
-                      white
-                    `,
-                  }}
-                >
-                  {options.map((opt) => {
-                    const value =
-                      typeof opt === "object" ? opt.value : opt;
-                    const label =
-                      typeof opt === "object" ? opt.label : opt;
-
-                    return (
-                      <label
-                        key={value}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selected.includes(value)}
-                          onChange={() =>
-                            toggleSelection(value, setter, selected)
-                          }
-                          className="accent-black"
-                        />
-                        {label}
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
 export default Pagination;
-

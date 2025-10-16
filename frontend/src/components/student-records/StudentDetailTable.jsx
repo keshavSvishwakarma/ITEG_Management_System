@@ -1,17 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Pagination from "../common-components/pagination/Pagination";
-import BackendPagination from "../common-components/pagination/BackendPagination";
+import SearchAndFilters from "../common-components/search-filters/SearchAndFilters";
 import {
   useAdmitedStudentsQuery,
 } from "../../redux/api/authApi";
 import Loader from "../common-components/loader/Loader";
 import CommonTable from "../common-components/table/CommonTable";
-// import edit from "../../assets/icons/edit-fill-icon.png";
-// import interview from "../../assets/icons/interview-icon.png";
 import CreateInterviewModal from "./CreateInterviewModal";
 import PageNavbar from "../common-components/navbar/PageNavbar";
 import { buttonStyles } from "../../styles/buttonStyles";
+import Pagination from "../common-components/pagination/Pagination";
 
 const StudentDetailTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,7 +31,7 @@ const StudentDetailTable = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [activeTab, setActiveTab] = useState(`Level ${selectedLevel}`);
-  const [selectedRows, setSelectedRows] = useState([]);
+  // const [selectedRows, setSelectedRows] = useState([]);
 
   const levelTabs = ["Level 1A", "Level 1B", "Level 1C", "Level 2A", "Level 2B", "Level 2C", "Level's Cleared"];
 
@@ -176,12 +174,33 @@ const StudentDetailTable = () => {
       });
     }
 
-    // Level filter - show all students for now since currentLevel is not in response
+    // Level progression filter
     let matchesLevel = true;
     if (activeTab === "Level's Cleared") {
       // Show students who have passed Level 2C
       const level2CAttempts = student.levelAttempts?.["2C"] || [];
       matchesLevel = level2CAttempts.some(lvl => lvl.result === "Pass");
+    } else if (selectedLevel && selectedLevel !== "permission") {
+      // Define level progression order
+      const levelOrder = ["1A", "1B", "1C", "2A", "2B", "2C"];
+      const currentLevelIndex = levelOrder.indexOf(selectedLevel);
+      
+      if (currentLevelIndex === 0) {
+        // For Level 1A, show students who haven't passed 1A yet
+        const level1AAttempts = student.levelAttempts?.["1A"] || [];
+        matchesLevel = !level1AAttempts.some(lvl => lvl.result === "Pass");
+      } else if (currentLevelIndex > 0) {
+        // For other levels, check if student passed the previous level
+        const previousLevel = levelOrder[currentLevelIndex - 1];
+        const previousLevelAttempts = student.levelAttempts?.[previousLevel] || [];
+        const hasPassedPrevious = previousLevelAttempts.some(lvl => lvl.result === "Pass");
+        
+        // And hasn't passed the current level yet
+        const currentLevelAttempts = student.levelAttempts?.[selectedLevel] || [];
+        const hasPassedCurrent = currentLevelAttempts.some(lvl => lvl.result === "Pass");
+        
+        matchesLevel = hasPassedPrevious && !hasPassedCurrent;
+      }
     }
 
     return matchesTrack && matchesCourse && matchesAttempts && matchesLevel;
@@ -302,11 +321,18 @@ const StudentDetailTable = () => {
             ))}
           </div>
 
-
+          <SearchAndFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filtersConfig={filtersConfig}
+            allData={data?.data || []}
+            selectedRows={[]}
+            sectionName="student-detail"
+          />
         </div>
-
+        
         <CommonTable
-          data={currentData}
+          data={filteredData}
           columns={columns}
           actionButton={selectedLevel === "permission" || activeTab === "Level's Cleared" ? null : actionButton}
           onRowClick={(row) => {
@@ -316,7 +342,7 @@ const StudentDetailTable = () => {
           }}
         />
         
-        <BackendPagination
+        <Pagination
           currentPage={currentPage}
           totalPages={data?.meta?.pages || 1}
           totalItems={data?.meta?.total || 0}
@@ -324,7 +350,7 @@ const StudentDetailTable = () => {
           onPageChange={setCurrentPage}
         />
       </div>
-
+ 
       <CreateInterviewModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
