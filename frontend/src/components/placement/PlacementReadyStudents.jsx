@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../common-components/pagination/Pagination";
+import SearchAndFilters from "../common-components/search-filters/SearchAndFilters";
 import { useGetReadyStudentsForPlacementQuery, useAdmitedStudentsQuery } from "../../redux/api/authApi";
 import Loader from "../common-components/loader/Loader";
 import CommonTable from "../common-components/table/CommonTable";
@@ -31,7 +32,8 @@ const PlacementReadyStudents = () => {
   // Get admitted students data for Placed Student tab
   const { data: admittedStudents } = useAdmitedStudentsQuery();
 
-  const [rowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [selectedResults, setSelectedResults] = useState([]);
@@ -147,6 +149,14 @@ const PlacementReadyStudents = () => {
       );
     });
   };
+
+  const filteredData = getFilteredData();
+
+  // Calculate pagination for filtered data
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
 
   // Helper function to get latest company info
   const getLatestCompanyInfo = (student) => {
@@ -363,6 +373,7 @@ const PlacementReadyStudents = () => {
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page when tab changes
     localStorage.setItem('placementActiveTab', tab);
   };
 
@@ -418,28 +429,20 @@ const PlacementReadyStudents = () => {
           </div>
 
           {/* Filters + Search */}
-          <div className="flex justify-between items-center flex-wrap gap-4">
-            <Pagination
-              rowsPerPage={rowsPerPage}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filtersConfig={filtersConfig}
-              filteredData={getFilteredData()}
-              selectedRows={selectedRows}
-              allData={students}
-              sectionName={activeTab.replace(/\s+/g, '').toLowerCase()}
-            />
-          </div>
+          <SearchAndFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filtersConfig={filtersConfig}
+            allData={students}
+            selectedRows={selectedRows}
+            sectionName={activeTab.replace(/\s+/g, '').toLowerCase()}
+          />
         </div>
 
         {/* Table */}
         <CommonTable
           columns={columns}
-          data={getFilteredData()}
-          editable={true}
-          pagination={true}
-          rowsPerPage={rowsPerPage}
-          searchTerm={searchTerm}
+          data={paginatedData}
           actionButton={activeTab === "Qualified Students" || activeTab === "Ongoing Interviews" ? (student) => (
             <button
               onClick={(e) => {
@@ -452,8 +455,15 @@ const PlacementReadyStudents = () => {
               + Add Interview
             </button>
           ) : null}
-          onSelectionChange={setSelectedRows}
           onRowClick={handleRowClick}
+        />
+        
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
         />
 
         {/* Modal */}

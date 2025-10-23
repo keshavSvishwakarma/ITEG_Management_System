@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { downloadCSV, downloadExcel, downloadPDF } from "../../utils/downloadHelpers";
+import Pagination from "../common-components/pagination/Pagination";
 
 const Table = ({ columns, data, searchable, filterable, editable, pagination }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -179,58 +180,17 @@ const Table = ({ columns, data, searchable, filterable, editable, pagination }) 
 
         {/* Pagination Controls */}
         {pagination && (
-          <div className="mt-4 flex flex-col md:flex-row justify-between items-center text-sm gap-3">
-            <p className="text-gray-600">
-              Showing {(currentPage - 1) * rowsPerPage + 1} to{" "}
-              {Math.min(currentPage * rowsPerPage, filteredData.length)} of {filteredData.length}
-            </p>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="rowsPerPage" className="text-gray-600">
-                Rows per page:
-              </label>
-              <select
-                id="rowsPerPage"
-                value={rowsPerPage}
-                onChange={(e) => {
-                  setRowsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="border px-2 py-1 rounded-md"
-              >
-                {[5, 10, 20, 50].map((count) => (
-                  <option key={count} value={count}>
-                    {count}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                className="px-2 py-1 border rounded-md"
-              >
-                {"<"}
-              </button>
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded-md border ${currentPage === i + 1 ? "bg-blue-500 text-white" : "hover:bg-gray-100"
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                className="px-2 py-1 border rounded-md"
-              >
-                {">"}
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredData.length}
+            rowsPerPage={rowsPerPage}
+            onPageChange={setCurrentPage}
+            onRowsPerPageChange={(newRowsPerPage) => {
+              setRowsPerPage(newRowsPerPage);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </div>
     </div>

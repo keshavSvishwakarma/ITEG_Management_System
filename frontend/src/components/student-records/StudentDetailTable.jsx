@@ -120,8 +120,7 @@ const StudentDetailTable = () => {
   const currentLoading = isLoading;
   
   // Debug: Check data
-  console.log('Current Data:', currentData);
-  console.log('Current Data Length:', currentData.length);
+
 
   const enhancedData = currentData.map((student) => {
     // Get all level attempts grouped by levelNo
@@ -206,12 +205,59 @@ const StudentDetailTable = () => {
     return matchesTrack && matchesCourse && matchesAttempts && matchesLevel;
   });
   
-  // Debug: Check filtered data
-  console.log('Filtered Data:', filteredData);
-  console.log('Filtered Data Length:', filteredData.length);
+  // Calculate count for each level tab
+  const levelCounts = useMemo(() => {
+    const counts = {};
+    
+    levelTabs.forEach(tab => {
+      if (tab === "Level's Cleared") {
+        // Count students who passed Level 2C
+        counts[tab] = enhancedData.filter(student => {
+          const level2CAttempts = student.levelAttempts?.["2C"] || [];
+          return level2CAttempts.some(lvl => lvl.result === "Pass");
+        }).length;
+      } else {
+        // Extract level code from tab name
+        const levelCode = tab.replace("Level ", "");
+        const levelOrder = ["1A", "1B", "1C", "2A", "2B", "2C"];
+        const currentLevelIndex = levelOrder.indexOf(levelCode);
+        
+        counts[tab] = enhancedData.filter(student => {
+          if (currentLevelIndex === 0) {
+            // For Level 1A, show students who haven't passed 1A yet
+            const level1AAttempts = student.levelAttempts?.["1A"] || [];
+            return !level1AAttempts.some(lvl => lvl.result === "Pass");
+          } else if (currentLevelIndex > 0) {
+            // For other levels, check if student passed the previous level
+            const previousLevel = levelOrder[currentLevelIndex - 1];
+            const previousLevelAttempts = student.levelAttempts?.[previousLevel] || [];
+            const hasPassedPrevious = previousLevelAttempts.some(lvl => lvl.result === "Pass");
+            
+            // And hasn't passed the current level yet
+            const currentLevelAttempts = student.levelAttempts?.[levelCode] || [];
+            const hasPassedCurrent = currentLevelAttempts.some(lvl => lvl.result === "Pass");
+            
+            return hasPassedPrevious && !hasPassedCurrent;
+          }
+          return false;
+        }).length;
+      }
+    });
+    
+    return counts;
+  }, [enhancedData]);
+
+
+
+  // Calculate pagination using filtered data
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page when tab changes
     if (tab === "Level's Cleared") {
       // For Level's Cleared tab, don't navigate with level state
       navigate(`/student-detail-table`, { state: { level: "cleared" } });
@@ -332,7 +378,7 @@ const StudentDetailTable = () => {
         </div>
         
         <CommonTable
-          data={filteredData}
+          data={paginatedData}
           columns={columns}
           actionButton={selectedLevel === "permission" || activeTab === "Level's Cleared" ? null : actionButton}
           onRowClick={(row) => {
@@ -344,8 +390,8 @@ const StudentDetailTable = () => {
         
         <Pagination
           currentPage={currentPage}
-          totalPages={data?.meta?.pages || 1}
-          totalItems={data?.meta?.total || 0}
+          totalPages={totalPages}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
         />

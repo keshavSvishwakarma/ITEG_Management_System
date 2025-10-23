@@ -10,12 +10,18 @@ import { toast } from "react-toastify";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 
 const PlacementRecords = () => {
-  const { data = {}, refetch, isLoading } = useGetReadyStudentsForPlacementQuery(undefined, {
+  const { data = {}, refetch, isLoading, error } = useGetReadyStudentsForPlacementQuery(undefined, {
     refetchOnMountOrArgChange: true,
     refetchOnFocus: true,
     pollingInterval: 10000, // Poll every 15 seconds
   });
   const students = data?.data || [];
+  
+  // Debug logging
+  console.log('PlacementRecords - Data:', data);
+  console.log('PlacementRecords - Students:', students);
+  console.log('PlacementRecords - Loading:', isLoading);
+  console.log('PlacementRecords - Error:', error);
 
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState(null);
@@ -87,10 +93,33 @@ const PlacementRecords = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading placement records</p>
+          <p className="text-gray-500">{error?.data?.message || 'Something went wrong'}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="space-y-6 p-4">
-        {students.map((student) => (
+        {students.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No placement records found</p>
+            <p className="text-gray-400 text-sm mt-2">Students with interview records will appear here</p>
+          </div>
+        ) : (
+          students.map((student) => (
           <div
             key={student._id}
             className="bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition duration-300 flex flex-col md:flex-row p-6 gap-6"
@@ -150,7 +179,8 @@ const PlacementRecords = () => {
               )}
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Modal */}

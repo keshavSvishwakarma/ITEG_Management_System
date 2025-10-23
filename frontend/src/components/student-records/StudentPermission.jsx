@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useGetPermissionStudentQuery,
@@ -6,11 +6,15 @@ import {
 import Loader from '../common-components/loader/Loader';
 import CommonTable from '../common-components/table/CommonTable';
 import Pagination from '../common-components/pagination/Pagination';
+import SearchAndFilters from '../common-components/search-filters/SearchAndFilters';
 import PageNavbar from "../common-components/navbar/PageNavbar";
 // import { HiArrowNarrowLeft } from "react-icons/hi";
 
 const StudentPermission = () => {
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
   const {
     data,
     isLoading,
@@ -19,7 +23,6 @@ const StudentPermission = () => {
   } = useGetPermissionStudentQuery();
 
   const students = data?.data || [];
-  const [rowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [selectedResults, setSelectedResults] = useState([]);
@@ -31,10 +34,15 @@ const StudentPermission = () => {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
+  // Dynamic options from data
+  const dynamicTrackOptions = useMemo(() => {
+    return [...new Set(students.map((s) => toTitleCase(s.track || "")))].filter(Boolean);
+  }, [students]);
+
   const filtersConfig = [
     {
       title: "Track",
-      options: [...new Set(students.map((s) => toTitleCase(s.track || "")))].filter(Boolean),
+      options: dynamicTrackOptions,
       selected: selectedTracks,
       setter: setSelectedTracks,
     },
@@ -60,6 +68,12 @@ const StudentPermission = () => {
 
     return matchesTrack && matchesResult;
   });
+
+  // Calculate pagination for filtered data
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const columns = [
     {
@@ -160,32 +174,34 @@ const StudentPermission = () => {
 
       {/* ✅ Data Table */}
       {!isError && students.length > 0 && (
-      <div className="mt-1 border bg-[var(--backgroundColor)] shadow-sm rounded-lg">
-          <div className="px-6 py-4">
-            <div className="flex justify-between items-center flex-wrap gap-4">
-              <Pagination
-                rowsPerPage={rowsPerPage}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                filtersConfig={filtersConfig}
-                filteredData={filteredData}
-                sectionName="permissionstudents"
-              />
-            </div>
+        <div className="mt-1 border bg-[var(--backgroundColor)] shadow-sm rounded-lg">
+          <div className="px-6">
+            <SearchAndFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              filtersConfig={filtersConfig}
+              allData={students}
+              selectedRows={[]}
+              sectionName="permission-students"
+            />
           </div>
-
+          
           <CommonTable
-            data={filteredData}
+            data={paginatedData}
             columns={columns}
-            editable={true}
-            pagination={true}
-            rowsPerPage={rowsPerPage}
-            searchTerm={searchTerm}
             actionButton={null}
             onRowClick={(row) => {
               localStorage.setItem("lastSection", "permission");
               navigate(`/student-profile/${row._id}`, { state: { student: row } });
             }}
+          />
+          
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredData.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
           />
         </div>
       )}

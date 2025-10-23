@@ -177,17 +177,13 @@ const StudentList = () => {
     setCurrentPage(1);
   }, [searchTerm, trackFilterTab1, resultFilterTab2, statusFilterTab3, activeTab]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <p className="text-center text-red-500">Error fetching students.</p>;
-  }
+  const tabs = [
+    "Total Registration",
+    "Online Assessment",
+    "Technical Round",
+    "Final Round",
+    "Results",
+  ];
 
   const getLatestInterviewResult = (interviews = []) => {
     if (!interviews.length) return null;
@@ -208,6 +204,73 @@ const StudentList = () => {
       toast.error(err?.data?.data.message || "Failed to create interview");
     }
   };
+
+  // Calculate count for each admission tab
+  const tabCounts = useMemo(() => {
+    const counts = {};
+    const allStudents = data?.data || [];
+    
+    tabs.forEach(tab => {
+      try {
+        counts[tab] = allStudents.filter(student => {
+          if (!student) return false;
+          
+          const interviews = student.interviews || [];
+          const latestResult = getLatestInterviewResult(interviews);
+          const hasInterviews = interviews.length > 0;
+          const firstRound = interviews.filter((i) => i?.round === "First");
+          const secondRound = interviews.filter((i) => i?.round === "Second");
+
+          switch (tab) {
+            case "Online Assessment":
+              return (
+                student.onlineTest?.result === "Pending" &&
+                (!hasInterviews || firstRound.length === 0)
+              );
+            case "Technical Round":
+              return (
+                firstRound.length > 0 &&
+                !firstRound.some((i) => i?.result === "Pass") &&
+                firstRound.some((i) => i?.result === "Fail")
+              );
+            case "Final Round":
+              return (
+                firstRound.some((i) => i?.result === "Pass") &&
+                !secondRound.some((i) => i?.result === "Pass")
+              );
+            case "Results":
+              return (
+                secondRound.some((i) => i?.result === "Pass") ||
+                latestResult === "Fail" ||
+                secondRound.some((i) => i?.result === "Fail")
+              );
+            default: // Total Registration
+              return true;
+          }
+        }).length;
+      } catch (error) {
+        console.error(`Error calculating count for tab ${tab}:`, error);
+        counts[tab] = 0;
+      }
+    });
+    
+    return counts;
+  }, [data?.data]);
+
+  // Console log admission tab counts
+  console.log('Admission Tab-wise Data Counts:', tabCounts);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <p className="text-center text-red-500">Error fetching students.</p>;
+  }
 
   const matchTabCondition = (student) => {
     const latestResult = getLatestInterviewResult(student.interviews);
@@ -295,8 +358,15 @@ const StudentList = () => {
 
   const filteredData = allFilteredData;
 
+  // Calculate pagination for filtered data
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page when tab changes
     localStorage.setItem("admissionActiveTab", tab);
   };
 
@@ -373,14 +443,6 @@ const StudentList = () => {
         );
     }
   };
-
-  const tabs = [
-    "Total Registration",
-    "Online Assessment",
-    "Technical Round",
-    "Final Round",
-    "Results",
-  ];
 
   let columns = [];
   let actionButton;
@@ -686,7 +748,7 @@ const StudentList = () => {
           />
         </div>
         <CommonTable
-          data={filteredData}
+          data={paginatedData}
           columns={columns}
           actionButton={actionButton}
           onRowClick={(row) => {
@@ -697,8 +759,8 @@ const StudentList = () => {
         
         <Pagination
           currentPage={currentPage}
-          totalPages={data?.meta?.pages || 1}
-          totalItems={data?.meta?.total || 0}
+          totalPages={totalPages}
+          totalItems={tabCounts[activeTab] || 0}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
         />

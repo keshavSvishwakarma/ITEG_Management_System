@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useGetPlacedStudentsByCompanyQuery } from '../../redux/api/authApi';
 import Loader from '../common-components/loader/Loader';
 import PageNavbar from '../common-components/navbar/PageNavbar';
 import CommonTable from '../common-components/table/CommonTable';
 import Pagination from '../common-components/pagination/Pagination';
+import SearchAndFilters from '../common-components/search-filters/SearchAndFilters';
 
 const PlacedStudents = () => {
   const { companyId } = useParams();
@@ -21,8 +22,56 @@ const PlacedStudents = () => {
   const apiCompanyName = data?.company || companyName;
   const totalPlaced = data?.totalPlaced || students.length;
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedJobProfiles, setSelectedJobProfiles] = useState([]);
+  const [selectedJobTypes, setSelectedJobTypes] = useState([]);
+
+  // Dynamic options from data
+  const dynamicJobProfileOptions = useMemo(() => {
+    return [...new Set(students.map((s) => s.placedInfo?.jobProfile || ''))].filter(Boolean);
+  }, [students]);
+
+  const dynamicJobTypeOptions = useMemo(() => {
+    return [...new Set(students.map((s) => s.placedInfo?.jobType || ''))].filter(Boolean);
+  }, [students]);
+
+  const filtersConfig = [
+    {
+      title: "Job Profile",
+      options: dynamicJobProfileOptions,
+      selected: selectedJobProfiles,
+      setter: setSelectedJobProfiles,
+    },
+    {
+      title: "Job Type",
+      options: dynamicJobTypeOptions,
+      selected: selectedJobTypes,
+      setter: setSelectedJobTypes,
+    },
+  ];
+
+  const filteredData = students.filter((student) => {
+    const searchableValues = Object.values(student)
+      .map((val) => String(val ?? "").toLowerCase())
+      .join(" ");
+    if (!searchableValues.includes(searchTerm.toLowerCase())) return false;
+
+    const jobProfile = student.placedInfo?.jobProfile || "";
+    const matchesJobProfile = selectedJobProfiles.length === 0 || selectedJobProfiles.includes(jobProfile);
+
+    const jobType = student.placedInfo?.jobType || "";
+    const matchesJobType = selectedJobTypes.length === 0 || selectedJobTypes.includes(jobType);
+
+    return matchesJobProfile && matchesJobType;
+  });
+
+  // Calculate pagination for filtered data
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const columns = [
     {
@@ -156,13 +205,13 @@ const PlacedStudents = () => {
 
           {/* Search and Filters */}
           <div className="px-6">
-            <Pagination
+            <SearchAndFilters
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
+              filtersConfig={filtersConfig}
               allData={students}
-              selectedRows={selectedRows}
+              selectedRows={[]}
               sectionName="placed-students"
-              filtersConfig={[]}
             />
           </div>
 
@@ -178,14 +227,21 @@ const PlacedStudents = () => {
               <p className="text-gray-500">No students have been placed in this company yet.</p>
             </div>
           ) : (
-            <CommonTable
-              columns={columns}
-              data={students}
-              searchTerm={searchTerm}
-              pagination={true}
-              rowsPerPage={10}
-              onSelectionChange={setSelectedRows}
-            />
+            <>
+              <CommonTable
+                columns={columns}
+                data={paginatedData}
+                actionButton={null}
+              />
+              
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredData.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
           )}
         </div>
       </div>

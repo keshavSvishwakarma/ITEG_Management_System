@@ -4,16 +4,19 @@ import { useAdmitedStudentsQuery } from "../../redux/api/authApi";
 import PageNavbar from "../common-components/navbar/PageNavbar";
 import CreatePostModal from "./CreatePostModal";
 import CommonTable from "../common-components/table/CommonTable";
+import SearchAndFilters from "../common-components/search-filters/SearchAndFilters";
+import Pagination from "../common-components/pagination/Pagination";
 import Loader from "../common-components/loader/Loader";
 import profile from "../../assets/images/profileImgDummy.jpeg";
 import iteg from "../../assets/images/logo.png";
 import ssism from "../../assets/images/iteg-logo.png";
-import Pagination from "../common-components/pagination/Pagination";
 
 const PlacementPost = () => {
   console.log("PlacementPost component loaded");
   const [isCreatePostModalOpen, setCreatePostModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTracks, setSelectedTracks] = useState([]);
@@ -30,7 +33,7 @@ const PlacementPost = () => {
   const { data: admittedStudents, isLoading, error } = useAdmitedStudentsQuery();
 
   // Filter only placed students (those with placedInfo)
-  const allPlacedStudents = admittedStudents?.filter(student => student.placedInfo !== null) || [];
+  const allPlacedStudents = (admittedStudents?.data || admittedStudents || []).filter(student => student.placedInfo !== null) || [];
 
   // Dynamic filter options
   const dynamicTrackOptions = [...new Set(allPlacedStudents.map(s => toTitleCase(s.track || "")))].filter(Boolean);
@@ -67,6 +70,12 @@ const PlacementPost = () => {
 
     return trackMatch && subjectMatch && searchMatch;
   });
+
+  // Calculate pagination for filtered data
+  const totalPages = Math.ceil(placedStudents.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = placedStudents.slice(startIndex, endIndex);
 
   // Download post function
   const downloadPost = async (student) => {
@@ -244,9 +253,9 @@ const PlacementPost = () => {
       />
 
       <div className="mt-1 border bg-[var(--backgroundColor)] shadow-sm rounded-lg pb-5">
-        {/* Pagination Controls - Show in both modes */}
+        {/* Search and Filters */}
         <div className="px-6">
-          <Pagination
+          <SearchAndFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             filtersConfig={filtersConfig}
@@ -271,99 +280,108 @@ const PlacementPost = () => {
           </div>
         ) : viewMode === 'table' ? (
           /* Table View */
-          <CommonTable
-            columns={[
-              {
-                key: "profile",
-                label: "Student",
-                render: (row) => (
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={row.image || profile}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div>
-                      <div className="font-medium">
-                        {toTitleCase(row.firstName)} {toTitleCase(row.lastName)}
+          <>
+            <CommonTable
+              columns={[
+                {
+                  key: "profile",
+                  label: "Student",
+                  render: (row) => (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={row.image || profile}
+                        alt="Profile"
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <div className="font-medium">
+                          {toTitleCase(row.firstName)} {toTitleCase(row.lastName)}
+                        </div>
+                        <div className="text-sm text-gray-500">{row.email}</div>
                       </div>
-                      <div className="text-sm text-gray-500">{row.email}</div>
                     </div>
-                  </div>
-                ),
-              },
-              {
-                key: "course",
-                label: "Course",
-                render: (row) => row.course || 'N/A',
-              },
-              {
-                key: "location",
-                label: "Location",
-                render: (row) => row.village || 'N/A',
-              },
-              {
-                key: "company",
-                label: "Company",
-                render: (row) => toTitleCase(row.placedInfo?.companyName || 'N/A'),
-              },
-              {
-                key: "position",
-                label: "Position",
-                render: (row) => toTitleCase(row.placedInfo?.jobProfile || 'N/A'),
-              },
-              {
-                key: "salary",
-                label: "Salary",
-                render: (row) => row.placedInfo?.salary ? `₹${(row.placedInfo.salary / 100000).toFixed(1)} LPA` : 'N/A',
-              },
-              {
-                key: "update",
-                label: "Update",
-                render: (row) => (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedStudent(row);
-                      setCreatePostModalOpen(true);
-                    }}
-                    className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-2 rounded-md transition-colors flex items-center gap-2"
-                    title="Update Post"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Update
-                  </button>
-                )
-              },
-              {
-                key: "download",
-                label: "Download",
-                render: (row) => (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      downloadPost(row);
-                    }}
-                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md transition-colors flex items-center gap-2"
-                    title="Download Post"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                    Download
-                  </button>
-                )
-              },
-            ]}
-            data={placedStudents}
-            pagination={true}
-            rowsPerPage={10}
-          />
+                  ),
+                },
+                {
+                  key: "course",
+                  label: "Course",
+                  render: (row) => row.course || 'N/A',
+                },
+                {
+                  key: "location",
+                  label: "Location",
+                  render: (row) => row.village || 'N/A',
+                },
+                {
+                  key: "company",
+                  label: "Company",
+                  render: (row) => toTitleCase(row.placedInfo?.companyName || 'N/A'),
+                },
+                {
+                  key: "position",
+                  label: "Position",
+                  render: (row) => toTitleCase(row.placedInfo?.jobProfile || 'N/A'),
+                },
+                {
+                  key: "salary",
+                  label: "Salary",
+                  render: (row) => row.placedInfo?.salary ? `₹${(row.placedInfo.salary / 100000).toFixed(1)} LPA` : 'N/A',
+                },
+                {
+                  key: "update",
+                  label: "Update",
+                  render: (row) => (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedStudent(row);
+                        setCreatePostModalOpen(true);
+                      }}
+                      className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-2 rounded-md transition-colors flex items-center gap-2"
+                      title="Update Post"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      Update
+                    </button>
+                  )
+                },
+                {
+                  key: "download",
+                  label: "Download",
+                  render: (row) => (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadPost(row);
+                      }}
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md transition-colors flex items-center gap-2"
+                      title="Download Post"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                      Download
+                    </button>
+                  )
+                },
+              ]}
+              data={paginatedData}
+              actionButton={null}
+            />
+            
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={placedStudents.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           /* Cards Grid - Fully Responsive */
           <div className="mt-8 px-4">

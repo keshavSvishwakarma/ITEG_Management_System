@@ -1,17 +1,52 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetAllCompaniesQuery } from '../../redux/api/authApi';
 import Loader from '../common-components/loader/Loader';
 import PageNavbar from '../common-components/navbar/PageNavbar';
 import CommonTable from '../common-components/table/CommonTable';
 import Pagination from '../common-components/pagination/Pagination';
+import SearchAndFilters from '../common-components/search-filters/SearchAndFilters';
 
 const CompanyDetail = () => {
   const navigate = useNavigate();
   const { data, isLoading, error } = useGetAllCompaniesQuery();
   const companies = data?.data || data || [];
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedLocations, setSelectedLocations] = useState([]);
+
+  // Dynamic options from data
+  const dynamicLocationOptions = useMemo(() => {
+    return [...new Set(companies.map((c) => c.location || ''))].filter(Boolean);
+  }, [companies]);
+
+  const filtersConfig = [
+    {
+      title: "Location",
+      options: dynamicLocationOptions,
+      selected: selectedLocations,
+      setter: setSelectedLocations,
+    },
+  ];
+
+  const filteredData = companies.filter((company) => {
+    const searchableValues = Object.values(company)
+      .map((val) => String(val ?? "").toLowerCase())
+      .join(" ");
+    if (!searchableValues.includes(searchTerm.toLowerCase())) return false;
+
+    const location = company.location || "";
+    const matchesLocation = selectedLocations.length === 0 || selectedLocations.includes(location);
+
+    return matchesLocation;
+  });
+
+  // Calculate pagination for filtered data
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const handleRowClick = (company) => {
     navigate(`/placement/company/${company._id}`, {
@@ -85,29 +120,36 @@ const CompanyDetail = () => {
       />
       <div className="mt-1 border bg-[var(--backgroundColor)] shadow-sm rounded-lg">
 
-        <div className="flex px-6 justify-between items-center flex-wrap gap-4">
-          <Pagination
+        <div className="px-6">
+          <SearchAndFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
+            filtersConfig={filtersConfig}
             allData={companies}
-            selectedRows={selectedRows}
+            selectedRows={[]}
             sectionName="companies"
-            filtersConfig={[]}
           />
         </div>
 
         {companies.length === 0 ? (
           <p className="text-center text-gray-500">No companies found.</p>
         ) : (
-          <CommonTable
-            columns={columns}
-            data={companies}
-            searchTerm={searchTerm}
-            pagination={true}
-            rowsPerPage={10}
-            onSelectionChange={setSelectedRows}
-            onRowClick={handleRowClick}
-          />
+          <>
+            <CommonTable
+              columns={columns}
+              data={paginatedData}
+              actionButton={null}
+              onRowClick={handleRowClick}
+            />
+            
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredData.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
       </div>
     </div>

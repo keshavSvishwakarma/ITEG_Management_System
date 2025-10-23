@@ -1,93 +1,136 @@
 // File: components/Pagination.jsx
 /* eslint-disable react/prop-types */
+import { useState, useRef, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
+
+const CustomDropdownForPagination = ({ value, onChange, options, label }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`
+          h-8 border border-gray-300 rounded-md px-3 py-1 bg-white text-left
+          focus:outline-none focus:border-black focus:ring-0 
+          flex items-center justify-between min-w-[60px] text-sm
+          ${isOpen ? "border-black" : ""}
+          transition-all duration-200
+        `}
+      >
+        <span className="text-gray-900">
+          {selectedOption ? selectedOption.label : value}
+        </span>
+        <span className={`ml-1 transition-transform duration-200 text-xs ${isOpen ? 'rotate-180' : ''}`}>
+          ▼
+        </span>
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute bottom-full left-0 mb-1 rounded-xl shadow-lg z-50 overflow-hidden border min-w-[60px]"
+          style={{
+            background: `
+              linear-gradient(to bottom left, rgba(173, 216, 230, 0.4) 0%, transparent 20%),
+              linear-gradient(to top right, rgba(255, 182, 193, 0.4) 0%, transparent 20%),
+              white
+            `
+          }}
+        >
+          {options.map((option) => (
+            <div
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-left transition-colors duration-150 text-sm"
+            >
+              {option.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Pagination = ({
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
-  itemsPerPage = 10,
+  rowsPerPage = 10,
   onPageChange,
+  onRowsPerPageChange,
 }) => {
-  const getVisiblePages = () => {
-    const delta = 2;
-    const range = [];
-    const rangeWithDots = [];
+  const startItem = (currentPage - 1) * rowsPerPage + 1;
+  const endItem = Math.min(currentPage * rowsPerPage, totalItems);
 
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
-    }
+  // Always show pagination
 
-    if (currentPage - delta > 2) {
-      rangeWithDots.push(1, "...");
-    } else {
-      rangeWithDots.push(1);
-    }
-
-    rangeWithDots.push(...range);
-
-    if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push("...", totalPages);
-    } else {
-      rangeWithDots.push(totalPages);
-    }
-
-    return rangeWithDots;
-  };
-
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const rowsPerPageOptions = [
+    { value: 5, label: "5" },
+    { value: 10, label: "10" },
+    { value: 20, label: "20" },
+    { value: 50, label: "50" }
+  ];
 
   return (
-    <>
-      {/* Backend Pagination Controls */}
-      {totalPages > 1 && onPageChange && (
-        <div className="flex items-center justify-between px-6 py-3 bg-white border-t">
-          <div className="flex items-center text-sm text-gray-700">
-            Showing {startItem} to {endItem} of {totalItems} results
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4 rotate-180" />
-            </button>
+    <div className="flex items-center justify-between px-6 py-3 bg-white text-sm text-gray-700">
+      {/* Left Section: Empty for spacing */}
+      <div></div>
 
-            {getVisiblePages().map((page, index) => (
-              <button
-                key={index}
-                onClick={() => typeof page === "number" && onPageChange(page)}
-                disabled={page === "..."}
-                className={`px-3 py-2 text-sm rounded-md ${
-                  page === currentPage
-                    ? "bg-blue-600 text-white"
-                    : page === "..."
-                    ? "text-gray-400 cursor-default"
-                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+      {/* Right Section: All pagination controls */}
+      <div className="flex items-center space-x-6">
+        {/* Rows per page */}
+        <div className="flex items-center space-x-2">
+          <span className="font-medium">Rows Per Pages:</span>
+          <CustomDropdownForPagination
+            value={rowsPerPage}
+            onChange={onRowsPerPageChange}
+            options={rowsPerPageOptions}
+          />
         </div>
-      )}
-    </>
+
+        {/* Showing info */}
+        <div>
+          {startItem} - {endItem} of {totalItems}
+        </div>
+
+        {/* Navigation arrows */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-1.5 rounded border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="w-4 h-4 rotate-180" />
+          </button>
+
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-1.5 rounded border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
