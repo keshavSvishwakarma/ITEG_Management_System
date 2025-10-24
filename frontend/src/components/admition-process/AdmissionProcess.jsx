@@ -750,6 +750,7 @@ const StudentList = () => {
         <CommonTable
           data={paginatedData}
           columns={columns}
+          editable={true}
           actionButton={actionButton}
           onRowClick={(row) => {
             localStorage.setItem("lastSection", "admission");

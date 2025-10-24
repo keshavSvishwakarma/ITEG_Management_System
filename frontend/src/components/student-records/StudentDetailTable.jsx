@@ -268,6 +268,7 @@ const StudentDetailTable = () => {
     }
   };
 
+  
   const columns = [
     {
       key: "fullName",
@@ -380,6 +381,7 @@ const StudentDetailTable = () => {
         <CommonTable
           data={paginatedData}
           columns={columns}
+          editable={true}
           actionButton={selectedLevel === "permission" || activeTab === "Level's Cleared" ? null : actionButton}
           onRowClick={(row) => {
             // Set the source section to 'admitted' before navigating
