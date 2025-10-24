@@ -761,7 +761,7 @@ const StudentList = () => {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={tabCounts[activeTab] || 0}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
         />
