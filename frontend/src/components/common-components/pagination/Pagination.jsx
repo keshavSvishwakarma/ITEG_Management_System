@@ -73,20 +73,20 @@ const Pagination = ({
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
-  rowsPerPage = 10,
+  itemsPerPage = 10,
   onPageChange,
-  onRowsPerPageChange,
+  onItemsPerPageChange,
 }) => {
-  const startItem = (currentPage - 1) * rowsPerPage + 1;
-  const endItem = Math.min(currentPage * rowsPerPage, totalItems);
-
-  // Always show pagination
+  const actualItemsPerPage = itemsPerPage === 'All' ? totalItems : itemsPerPage;
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * actualItemsPerPage + 1;
+  const endItem = itemsPerPage === 'All' ? totalItems : Math.min(currentPage * actualItemsPerPage, totalItems);
 
   const rowsPerPageOptions = [
-    { value: 5, label: "5" },
     { value: 10, label: "10" },
     { value: 20, label: "20" },
-    { value: 50, label: "50" }
+    { value: 50, label: "50" },
+    { value: 100, label: "100" },
+    { value: 'All', label: "All" }
   ];
 
   return (
@@ -100,8 +100,8 @@ const Pagination = ({
         <div className="flex items-center space-x-2">
           <span className="font-medium">Rows Per Pages:</span>
           <CustomDropdownForPagination
-            value={rowsPerPage}
-            onChange={onRowsPerPageChange}
+            value={itemsPerPage}
+            onChange={onItemsPerPageChange}
             options={rowsPerPageOptions}
           />
         </div>

@@ -31,10 +31,10 @@ const toTitleCase = (str) =>
 const StudentList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data = [], isLoading, error, refetch } = useGetAllStudentsQuery(
-    { page: currentPage, limit: itemsPerPage, search: searchTerm },
+    {},
     {
       refetchOnMountOrArgChange: true,
       refetchOnFocus: true,
@@ -359,9 +359,10 @@ const StudentList = () => {
   const filteredData = allFilteredData;
 
   // Calculate pagination for filtered data
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  const actualItemsPerPage = itemsPerPage === 'All' ? filteredData.length : itemsPerPage;
+  const totalPages = itemsPerPage === 'All' ? 1 : Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * actualItemsPerPage;
+  const endIndex = startIndex + actualItemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const handleTabClick = (tab) => {
@@ -762,8 +763,12 @@ const StudentList = () => {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={filteredData.length}
-          itemsPerPage={itemsPerPage}
+          itemsPerPage={actualItemsPerPage}
           onPageChange={setCurrentPage}
+          onItemsPerPageChange={(value) => {
+            setItemsPerPage(value);
+            setCurrentPage(1);
+          }}
         />
 
 
