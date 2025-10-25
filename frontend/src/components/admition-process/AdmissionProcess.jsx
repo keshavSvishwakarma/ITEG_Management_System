@@ -1,3 +1,238 @@
+// /* eslint-disable no-unused-vars */
+// import { useGetAllStudentsQuery, useInterviewCreateMutation } from "../../redux/api/authApi";
+// import CommonTable from "../common-components/table/CommonTable";
+// import { useEffect, useState, useMemo } from "react";
+// import CustomTimeDate from "./CustomTimeDate";
+// import { useLocation, useNavigate } from "react-router-dom";
+// import Pagination from "../common-components/pagination/Pagination";
+// import { AiFillStop } from "react-icons/ai";
+// import { FaCheckCircle } from "react-icons/fa";
+// import Loader from "../common-components/loader/Loader";
+// import * as Yup from "yup";
+// import { Formik, Form } from "formik";
+// import InputField from "../common-components/common-feild/InputField";
+// import CustomDropdown from "../common-components/common-feild/CustomDropdown";
+// import { toast } from "react-toastify";
+// import PageNavbar from "../common-components/navbar/PageNavbar";
+// import { buttonStyles } from "../../styles/buttonStyles";
+
+// const toTitleCase = (str) =>
+//   str
+//     ?.toLowerCase()
+//     .split(" ")
+//     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+//     .join(" ");
+
+// const StudentList = () => {
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [itemsPerPage, setItemsPerPage] = useState(10);
+//   const [activeTab, setActiveTab] = useState("Total Registration");
+//   const [selectedStudentId, setSelectedStudentId] = useState(null);
+//   const [atemendNumber, setAtemendNumber] = useState(null);
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+//   const [AddInterviwModalOpen, setAddInterviwModalOpen] = useState(false);
+//   const [id, setId] = useState(null);
+//   const [selectedRows, setSelectedRows] = useState([]);
+//   const navigate = useNavigate();
+//   const location = useLocation();
+
+//   const [createInterview, { isLoading: isSubmitting }] = useInterviewCreateMutation();
+
+//   const validationSchema = Yup.object().shape({
+//     round: Yup.string().required("Required"),
+//     remark: Yup.string().required("Remark is required"),
+//     result: Yup.string().required("Result is required"),
+//   });
+
+//   // Filter states per tab
+//   const [trackFilterTab1, setTrackFilterTab1] = useState([]);
+//   const [resultFilterTab2, setResultFilterTab2] = useState([]);
+//   const [statusFilterTab3, setStatusFilterTab3] = useState([]);
+
+//   const { data = {}, isLoading, error, refetch } = useGetAllStudentsQuery(
+//     itemsPerPage === 'All' 
+//       ? {} 
+//       : { page: currentPage, limit: itemsPerPage },
+//     { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+//   );
+
+//   const students = data?.data || [];
+
+//   // dynamic filter options
+//   const dynamicTrackOptions = useMemo(() => {
+//     return [...new Set(students.map((s) => toTitleCase(s.track || "")))].filter(Boolean);
+//   }, [students]);
+
+//   const dynamicResultOptions = useMemo(() => {
+//     const onlineResults = students.map((s) => toTitleCase(s.onlineTest?.result || "Not Attempted"));
+//     const interviewResults = students.flatMap((s) => s.interviews?.map((i) => toTitleCase(i.result || "")) || []);
+//     return [...new Set([...onlineResults, ...interviewResults])].filter(Boolean);
+//   }, [students]);
+
+//   const tabFilterConfig = {
+//     "Total Registration": [
+//       { title: "Track", options: dynamicTrackOptions, selected: trackFilterTab1, setter: setTrackFilterTab1 }
+//     ],
+//     "Online Assessment": [
+//       { title: "Track", options: dynamicTrackOptions, selected: trackFilterTab1, setter: setTrackFilterTab1 },
+//       { title: "Result", options: dynamicResultOptions, selected: resultFilterTab2, setter: setResultFilterTab2 }
+//     ],
+//     "Technical Round": [
+//       { title: "Track", options: dynamicTrackOptions, selected: trackFilterTab1, setter: setTrackFilterTab1 },
+//       { title: "Tech Status", options: dynamicResultOptions, selected: statusFilterTab3, setter: setStatusFilterTab3 }
+//     ],
+//     "Final Round": [
+//       { title: "Track", options: dynamicTrackOptions, selected: trackFilterTab1, setter: setTrackFilterTab1 }
+//     ],
+//     Results: [
+//       { title: "Track", options: dynamicTrackOptions, selected: trackFilterTab1, setter: setTrackFilterTab1 },
+//       { title: "Result", options: ["Selected", "Rejected"], selected: resultFilterTab2, setter: setResultFilterTab2 }
+//     ]
+//   };
+
+//   const filtersConfig = tabFilterConfig[activeTab] || [];
+
+//   // Handle URL tab & localStorage
+//   useEffect(() => {
+//     const searchParams = new URLSearchParams(location.search);
+//     const tabFromURL = searchParams.get("tab");
+//     const savedTab = localStorage.getItem("admissionActiveTab");
+
+//     if (tabFromURL) {
+//       setActiveTab(tabFromURL);
+//       localStorage.setItem("admissionActiveTab", tabFromURL);
+//     } else if (savedTab) {
+//       setActiveTab(savedTab);
+//     }
+
+//     window.scrollTo(0, 0);
+//   }, [location.search, refetch]);
+
+//   // Auto-refresh
+//   useEffect(() => {
+//     const handleFocus = () => refetch();
+//     window.addEventListener("focus", handleFocus);
+//     return () => window.removeEventListener("focus", handleFocus);
+//   }, [refetch]);
+
+//   // Reset page on search/filter change
+//   useEffect(() => setCurrentPage(1), [searchTerm, trackFilterTab1, resultFilterTab2, statusFilterTab3, activeTab]);
+
+//   const tabs = ["Total Registration", "Online Assessment", "Technical Round", "Final Round", "Results"];
+
+//   const getLatestInterviewResult = (interviews = []) => {
+//     if (!interviews.length) return null;
+//     return [...interviews].sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.result;
+//   };
+
+//   const matchTabCondition = (student) => {
+//     const latestResult = getLatestInterviewResult(student.interviews);
+//     const hasInterviews = student.interviews?.length > 0;
+//     const firstRound = student.interviews?.filter((i) => i.round === "First");
+//     const secondRound = student.interviews?.filter((i) => i.round === "Second");
+
+//     switch (activeTab) {
+//       case "Online Assessment":
+//         return student.onlineTest?.result === "Pending" && (!hasInterviews || firstRound.length === 0);
+//       case "Technical Round":
+//         return firstRound.length > 0 && !firstRound.some((i) => i.result === "Pass") && firstRound.some((i) => i.result === "Fail");
+//       case "Final Round":
+//         return firstRound.some((i) => i.result === "Pass") && !secondRound.some((i) => i.result === "Pass");
+//       case "Results":
+//         return secondRound.some((i) => i.result === "Pass") || latestResult === "Fail" || secondRound.some((i) => i.result === "Fail");
+//       default:
+//         return true;
+//     }
+//   };
+
+//   const filteredData = students.filter((student) => {
+//     const searchableValues = Object.values(student).map((v) => String(v ?? "").toLowerCase()).join(" ");
+//     if (!searchableValues.includes(searchTerm.toLowerCase())) return false;
+
+//     const track = toTitleCase(student.track || "");
+//     const latestResult = toTitleCase(getLatestInterviewResult(student.interviews || []) || "");
+//     const percentage = parseFloat(student.percentage);
+
+//     const matches = filtersConfig.every(({ title, selected }) => {
+//       if (selected.length === 0) return true;
+
+//       if (title === "Track") return selected.includes(track);
+//       if (title === "Result") {
+//         if (activeTab === "Online Assessment") return selected.includes(toTitleCase(student.onlineTest?.result || "Not Attempted"));
+//         if (activeTab === "Results") {
+//           const secondRound = student.interviews?.filter((i) => i.round === "Second") || [];
+//           const isSelected = secondRound.some((i) => i.result === "Pass");
+//           const isRejected = latestResult === "Fail" || secondRound.some((i) => i.result === "Fail");
+//           if (selected.includes("Selected") && isSelected) return true;
+//           if (selected.includes("Rejected") && isRejected) return true;
+//           return false;
+//         }
+//         return selected.includes(latestResult);
+//       }
+//       if (title === "Tech Status") return selected.includes(latestResult);
+//       if (title === "Interview") {
+//         return selected.some((range) => {
+//           const [min, max] = range.replace("%", "").split("-").map(Number);
+//           return percentage >= min && percentage <= max;
+//         });
+//       }
+//       return true;
+//     });
+
+//     return matches && matchTabCondition(student);
+//   });
+
+//   const handleTabClick = (tab) => {
+//     setActiveTab(tab);
+//     setCurrentPage(1);
+//     localStorage.setItem("admissionActiveTab", tab);
+//   };
+
+//   if (isLoading) return <Loader />;
+
+//   return (
+//     <div className="px-4">
+//       <PageNavbar title="Students List" tabs={tabs} activeTab={activeTab} onTabClick={handleTabClick} />
+//       <div className="my-4 flex justify-between items-center">
+//         <input
+//           type="text"
+//           placeholder="Search..."
+//           value={searchTerm}
+//           onChange={(e) => setSearchTerm(e.target.value)}
+//           className="border p-2 rounded"
+//         />
+//       </div>
+
+//       <div className="my-2 flex gap-4">
+//         {filtersConfig.map(({ title, options, selected, setter }) => (
+//           <CustomDropdown
+//             key={title}
+//             value={selected}
+//             onChange={setter}
+//             options={options}
+//             label={title}
+//           />
+//         ))}
+//       </div>
+
+//       <CommonTable data={filteredData} />
+
+//       <Pagination
+//         currentPage={currentPage}
+//         totalPages={data?.meta?.pages || 1}
+//         totalItems={data?.meta?.total || 0}
+//         itemsPerPage={itemsPerPage}
+//         onPageChange={setCurrentPage}
+//       />
+//     </div>
+//   );
+// };
+
+// export default StudentList;
+
+
+
 /* eslint-disable no-unused-vars */
 import { useGetAllStudentsQuery } from "../../redux/api/authApi";
 import CommonTable from "../common-components/table/CommonTable";
@@ -257,8 +492,6 @@ const StudentList = () => {
     return counts;
   }, [data?.data]);
 
-  // Console log admission tab counts
-  console.log('Admission Tab-wise Data Counts:', tabCounts);
 
   if (isLoading) {
     return (
@@ -306,57 +539,9 @@ const StudentList = () => {
     }
   };
 
-  const allFilteredData = (data?.data || []).filter((student) => {
-    const searchableValues = Object.values(student)
-      .map((val) => String(val ?? "").toLowerCase())
-      .join(" ");
-    if (!searchableValues.includes(searchTerm.toLowerCase())) return false;
-
-    const track = toTitleCase(student.track || "");
-    const latestResult = toTitleCase(
-      getLatestInterviewResult(student.interviews || []) || ""
-    );
-    const percentage = parseFloat(student.percentage);
-    const matches = filtersConfig.every(({ title, selected }) => {
-      if (selected.length === 0) return true;
-
-      if (title === "Track") {
-        return selected.includes(track);
-      }
-
-      if (title === "Result") {
-        if (activeTab === "Online Assessment") {
-          const onlineResult = toTitleCase(student.onlineTest?.result || "Not Attempted");
-          return selected.includes(onlineResult);
-        } else if (activeTab === "Results") {
-          const secondRound = student.interviews?.filter((i) => i.round === "Second") || [];
-          const isSelected = secondRound.some((i) => i.result === "Pass");
-          const isRejected = latestResult === "Fail" || secondRound.some((i) => i.result === "Fail");
-
-          if (selected.includes("Selected") && isSelected) return true;
-          if (selected.includes("Rejected") && isRejected) return true;
-          return false;
-        } else {
-          return selected.includes(latestResult);
-        }
-      }
-
-      if (title === "Tech Status") {
-        return selected.includes(latestResult);
-      }
-      if (title === "Interview") {
-        return selected.some((range) => {
-          const [min, max] = range.replace("%", "").split("-").map(Number);
-          return percentage >= min && percentage <= max;
-        });
-      }
-      return true;
-    });
-
-    return matches && matchTabCondition(student);
+  const filteredData = (data?.data || []).filter((student) => {
+    return matchTabCondition(student);
   });
-
-  const filteredData = allFilteredData;
 
   // Use server-side pagination data
   const totalPages = data?.meta?.pages || 1;
