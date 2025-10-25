@@ -34,7 +34,7 @@ const StudentList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const { data = [], isLoading, error, refetch } = useGetAllStudentsQuery(
-    {},
+    { page: currentPage, limit: itemsPerPage === 'All' ? 1000 : itemsPerPage },
     {
       refetchOnMountOrArgChange: true,
       refetchOnFocus: true,
@@ -358,12 +358,10 @@ const StudentList = () => {
 
   const filteredData = allFilteredData;
 
-  // Calculate pagination for filtered data
-  const actualItemsPerPage = itemsPerPage === 'All' ? filteredData.length : itemsPerPage;
-  const totalPages = itemsPerPage === 'All' ? 1 : Math.ceil(filteredData.length / itemsPerPage) || 1;
-  const startIndex = (currentPage - 1) * actualItemsPerPage;
-  const endIndex = startIndex + actualItemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
+  // Use server-side pagination data
+  const totalPages = data?.meta?.pages || 1;
+  const totalItems = data?.meta?.total || 0;
+  const paginatedData = data?.data || [];
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
@@ -749,10 +747,11 @@ const StudentList = () => {
           />
         </div>
         <CommonTable
-          data={paginatedData}
+          data={data?.data || []}
           columns={columns}
           editable={true}
           actionButton={actionButton}
+          pagination={false}
           onRowClick={(row) => {
             localStorage.setItem("lastSection", "admission");
             navigate(`/admission/edit/${row._id}`, { state: { student: row } });
@@ -762,8 +761,8 @@ const StudentList = () => {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filteredData.length}
-          itemsPerPage={actualItemsPerPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={(value) => {
             setItemsPerPage(value);

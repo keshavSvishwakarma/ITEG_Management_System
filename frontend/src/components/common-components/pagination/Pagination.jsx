@@ -77,16 +77,14 @@ const Pagination = ({
   onPageChange,
   onItemsPerPageChange,
 }) => {
-  const actualItemsPerPage = itemsPerPage === 'All' ? totalItems : itemsPerPage;
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * actualItemsPerPage + 1;
-  const endItem = itemsPerPage === 'All' ? totalItems : Math.min(currentPage * actualItemsPerPage, totalItems);
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endItem = itemsPerPage === 'All' ? totalItems : Math.min(currentPage * itemsPerPage, totalItems);
 
   const rowsPerPageOptions = [
     { value: 10, label: "10" },
     { value: 20, label: "20" },
     { value: 50, label: "50" },
     { value: 100, label: "100" },
-    { value: 'All', label: "All" }
   ];
 
   return (

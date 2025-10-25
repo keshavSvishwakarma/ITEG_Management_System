@@ -93,9 +93,13 @@ const CommonTable = ({
   const totalPages = Math.ceil(filteredData.length / pageSize);
 
   const paginatedData = useMemo(() => {
+    // If pagination is disabled, show all data
+    if (pagination === false) {
+      return data;
+    }
     const start = (currentPage - 1) * pageSize;
     return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage, pageSize]);
+  }, [filteredData, currentPage, pageSize, pagination, data]);
 
 
   const isAllSelected = paginatedData.every((row) =>
@@ -173,7 +177,7 @@ const CommonTable = ({
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {paginatedData.map((row, rowIndex) => (
+                {(pagination === false ? data : paginatedData).map((row, rowIndex) => (
                   <tr key={rowIndex}
                     className={`hover:bg-gray-100 text-md transition cursor-pointer border-b border-dashed border-gray-300`}
                     onClick={() => onRowClick && onRowClick(row)} // ⬅️ Navigation trigger
