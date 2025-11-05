@@ -243,7 +243,7 @@ export default function StudentReport() {
                       <span className="absolute -top-4 right-0 text-xs text-gray-500">{skill.percentage}%</span>
                     </div>
                   </div>
-                )
+                ))}
               </div>
             </div>
               
