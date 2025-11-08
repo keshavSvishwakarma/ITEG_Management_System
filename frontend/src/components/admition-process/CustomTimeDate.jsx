@@ -219,7 +219,6 @@ const CustomTimeDate = ({ isOpen, onClose, studentId, refetch, activeTab }) => {
                 label="Reasoning Marks"
                 options={fivePointOptions}
               />
-
               <div className="col-span-2 text-sm font-semibold text-gray-600">
                 Candidate Behaviour & Soft Skill
               </div>
@@ -243,13 +242,10 @@ const CustomTimeDate = ({ isOpen, onClose, studentId, refetch, activeTab }) => {
                 label="Confidence Level"
                 options={behaviorOptions}
               />
-
               <div className="col-span-2 text-sm font-semibold text-gray-600">
                 Assignment Evaluation
               </div>
-
               <TextInput name="attemptNo" label="Attempt No" disabled />
-
               {/* Assignment Marks Field + Conditional Message */}
               <div>
                 <CustomDropdown
@@ -262,14 +258,12 @@ const CustomTimeDate = ({ isOpen, onClose, studentId, refetch, activeTab }) => {
                   }
                   disabled={activeTab !== "Technical Round"} // Disable only outside Technical
                 />
-
                 {activeTab !== "Technical Round" && (
                   <p className="text-xs text-gray-500 ml-1 italic">
                     ⚠️ This field is only applicable for the Technical Round.
                   </p>
                 )}
               </div>
-
               <div className="col-span-2 text-sm font-semibold text-gray-600">
                 Summary & Decision
               </div>
@@ -293,7 +287,6 @@ const CustomTimeDate = ({ isOpen, onClose, studentId, refetch, activeTab }) => {
                 label="Remark / Feedback..."
                 className="col-span-2"
               />
-
               <div className="col-span-2 mt-4">
                 <button
                   type="submit"
@@ -313,7 +306,6 @@ const CustomTimeDate = ({ isOpen, onClose, studentId, refetch, activeTab }) => {
             </Form>
           )}
         </Formik>
-
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-xl text-gray-400 hover:text-gray-700"
@@ -340,7 +332,6 @@ const AutoMarksCalculator = () => {
     confidence,
     assignmentMarks,
   } = values;
-
   useEffect(() => {
     const inputs = [
       maths,
@@ -353,9 +344,7 @@ const AutoMarksCalculator = () => {
       assignmentMarks,
     ];
     const inputsToCheck = inputs.slice(0, 7);
-
     const allFilled = inputsToCheck.every((val) => val !== "" && !isNaN(val));
-
     if (allFilled) {
       const total = inputsToCheck.reduce((sum, val) => sum + Number(val), 0);
       setFieldValue("marks", total);
@@ -371,6 +360,5 @@ const AutoMarksCalculator = () => {
     assignmentMarks,
     setFieldValue,
   ]);
-
   return null;
 };

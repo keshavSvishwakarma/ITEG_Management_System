@@ -68,7 +68,6 @@ export default function StudentReport() {
                 <RiEdit2Fill />
               </button>
             </div>
-
           </div>
         </div>
       </div>
@@ -93,8 +92,6 @@ export default function StudentReport() {
 
           {/* White Box 1 - Personal Information */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-            {/* <h2 className="text-2xl font-bold text-gray-800 mb-6">Personal Information</h2> */}
-
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
               <div className="md:col-span-2 space-y-4">
                 <div className="flex items-center gap-2">
@@ -146,7 +143,7 @@ export default function StudentReport() {
 
               <div className="md:col-span-1 flex justify-center">
                 <img
-                  src={studentData.profileImage || "/default-avatar.png"}
+                  src={studentData.profileImage || "https://via.placeholder.com/80x80/4F46E5/FFFFFF?text=Student"}
                   alt="Student Photo"
                   className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-sm"
                 />
@@ -161,8 +158,16 @@ export default function StudentReport() {
               {/* Stepper Column - 80% */}
               <div className="col-span-5">
                 <div className="relative">
-                  {/* Connecting Line */}
-                  <div className="absolute top-3 left-3 right-3 h-0.5 bg-gray-300"></div>
+                  {/* Background Connecting Line */}
+                  <div className="absolute top-3 left-3 right-3 h-1 bg-gray-300"></div>
+
+                  {/* Progress Line (Green) */}
+                  <div
+                    className="absolute top-3 left-3 h-1 bg-green-600"
+                    style={{
+                      width: `${((studentData.currentLevel ? ['1A', '1B', '1C', '2A', '2B', '2C'].indexOf(studentData.currentLevel) : -1) / 5) * 100}%`
+                    }}
+                  ></div>
 
                   {/* Steps */}
                   <div className="flex justify-between relative">
@@ -175,16 +180,17 @@ export default function StudentReport() {
                       return (
                         <div key={level} className="flex flex-col items-center">
                           <div className={`flex items-center justify-center rounded-full text-xs font-medium relative z-10 ${isPassed
-                            ? 'w-6 h-6 bg-green-600 text-white'
-                            : 'w-6 h-6 bg-gray-300'
+                              ? 'w-6 h-6 bg-green-600 text-white'
+                              : isCurrent
+                                ? 'w-6 h-6 bg-yellow-500 text-white'
+                                : 'w-6 h-6 bg-gray-300'
                             }`}>
-                            {isPassed ? '✓' : ''}
+                            {isPassed ? '✓' : isCurrent ? level : ''}
                           </div>
                           <span className="text-xs text-gray-500 mt-2">{level}</span>
                         </div>
                       );
-                    }
-                    )}
+                    })}
                   </div>
                 </div>
               </div>
@@ -195,7 +201,7 @@ export default function StudentReport() {
                   <div className="flex items-center justify-center w-10 h-10 text-white text-2xl font-medium">
                     🏆
                   </div>
-                  <span className="text-xs text-gray-500 ">Goal</span>
+                  <span className="text-xs text-gray-500">Goal</span>
                 </div>
               </div>
             </div>
@@ -207,63 +213,65 @@ export default function StudentReport() {
             <div className="col-span-1 bg-white rounded-lg shadow-md p-6">
               <h4 className="text-lg font-bold text-gray-800 mb-4">Technical Skills</h4>
               <div className="space-y-3">
-                {(reportCardData?.technicalSkills || [
-                  { name: 'HTML/CSS', percentage: 85 },
-                  { name: 'JavaScript', percentage: 90 },
-                  { name: 'React', percentage: 75 },
-                  { name: 'Node.js', percentage: 70 }
-                ]).map((tech, index) => (
+                {reportCardData?.technicalSkills?.length > 0 ? reportCardData.technicalSkills.map((tech, index) => (
                   <div key={index}>
-                    <span className="text-sm text-gray-600 block mb-1">{tech.name}</span>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-[#FDA92D] h-2 rounded-full" style={{ width: `${tech.percentage}%` }}></div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm text-gray-600">{tech.skillName}</span>
+                      <span className="text-xs text-gray-500">{tech.totalPercentage}%</span>
                     </div>
-                    <span className="text-xs text-gray-500">{tech.percentage}%</span>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-[#FDA92D] h-2 rounded-full" style={{ width: `${tech.totalPercentage}%` }}></div>
+                    </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center text-gray-500">
+                    <span>N/A</span>
+                  </div>
+                )}
               </div>
             </div>
-            
+
             {/* Soft Skills Box */}
             <div className="col-span-1 bg-white rounded-lg shadow-md p-6">
               <h4 className="text-lg font-bold text-gray-800 mb-4">Soft Skills</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {(reportCardData?.softSkills || [
-                  { name: 'Presentation', percentage: 85 },
-                  { name: 'Communication', percentage: 90 },
-                  { name: 'Teamwork', percentage: 88 },
-                  { name: 'Problem Solving', percentage: 82 },
-                  { name: 'Confidence', percentage: 87 },
-                  { name: 'Adaptability', percentage: 80 }
-                ]).map((skill, index) => (
-                  <div key={index} className="text-center">
-                    <p className="text-xs text-gray-600 mb-1">{skill.name}</p>
-                    <div className="relative w-full bg-gray-200 rounded-full h-1.5">
-                      <div className="bg-[#FDA92D] h-1.5 rounded-full" style={{ width: `${skill.percentage}%` }}></div>
-                      <span className="absolute -top-4 right-0 text-xs text-gray-500">{skill.percentage}%</span>
+              <div className="space-y-2">
+                {reportCardData?.softSkills?.categories?.length > 0 ? reportCardData.softSkills.categories.map((category, index) => (
+                  <div key={index}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-gray-600">{category.title}</span>
+                      <span className="text-xs text-gray-500">{category.score}/{category.maxMarks}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${(category.score / category.maxMarks) * 100}%` }}></div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center text-gray-500">
+                    <span>N/A</span>
+                  </div>
+                )}
               </div>
             </div>
-              
+
             {/* Discipline Box */}
             <div className="col-span-1 bg-white rounded-lg shadow-md p-6">
               <h4 className="text-lg font-bold text-gray-800 mb-4">Discipline</h4>
-              <div className="space-y-3">
-                {(reportCardData?.discipline || [
-                  { name: 'Attendance', percentage: 95, color: 'bg-green-500' },
-                  { name: 'Punctuality', percentage: 80, color: 'bg-orange-500' },
-                  { name: 'Assignment Submission', percentage: 90, color: 'bg-purple-500' },
-                  { name: 'Class Participation', percentage: 85, color: 'bg-red-500' }
-                ]).map((discipline, index) => (
+              <div className="space-y-2">
+                {reportCardData?.discipline?.categories?.length > 0 ? reportCardData.discipline.categories.map((category, index) => (
                   <div key={index}>
-                    <p className="text-sm text-gray-600 mb-1">{discipline.name}</p>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className={`${discipline.color || 'bg-blue-500'} h-2 rounded-full`} style={{ width: `${discipline.percentage}%` }}></div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-gray-600">{category.title}</span>
+                      <span className="text-xs text-gray-500">{category.score}/{category.maxMarks}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div className="bg-red-500 h-1.5 rounded-full" style={{ width: `${(category.score / category.maxMarks) * 100}%` }}></div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center text-gray-500">
+                    <span>N/A</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
