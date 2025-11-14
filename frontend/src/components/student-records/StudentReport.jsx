@@ -386,13 +386,13 @@ export default function StudentReport() {
             <div className="grid grid-cols-5 gap-6">
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">Current Level</p>
-                <div className="bg-gray-100 rounded-lg p-3">
+                <div className="bg-gray-100 rounded-lg p-2">
                   <span className="text-lg font-bold text-gray-800">{studentData.currentLevel || "1C"}</span>
                 </div>
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">1st Year SGPA</p>
-                <div className="bg-gray-100 rounded-lg p-3">
+                <div className="bg-gray-100 rounded-lg p-2">
                   <span className="text-lg font-bold text-gray-800">
                     {reportCardData?.academicPerformance?.yearWiseSGPA?.find(y => y.year === 'FY')?.sgpa || "N/A"}
                   </span>
@@ -400,7 +400,7 @@ export default function StudentReport() {
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">2nd Year SGPA</p>
-                <div className="bg-gray-100 rounded-lg p-3">
+                <div className="bg-gray-100 rounded-lg p-2">
                   <span className="text-lg font-bold text-gray-800">
                     {reportCardData?.academicPerformance?.yearWiseSGPA?.find(y => y.year === 'SY')?.sgpa || "N/A"}
                   </span>
@@ -408,7 +408,7 @@ export default function StudentReport() {
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">3rd Year SGPA</p>
-                <div className="bg-gray-100 rounded-lg p-3">
+                <div className="bg-gray-100 rounded-lg p-2">
                   <span className="text-lg font-bold text-gray-800">
                     {reportCardData?.academicPerformance?.yearWiseSGPA?.find(y => y.year === 'TY')?.sgpa || "N/A"}
                   </span>
@@ -416,7 +416,7 @@ export default function StudentReport() {
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">CGPA</p>
-                <div className="bg-gray-100 rounded-lg p-3">
+                <div className="bg-gray-100 rounded-lg p-2">
                   <span className="text-lg font-bold text-gray-800">{reportCardData?.academicPerformance?.cgpa || "N/A"}</span>
                 </div>
               </div>
@@ -445,14 +445,14 @@ export default function StudentReport() {
           </div>
           {/* Faculty Feedback */}
           <div className="bg-[#EFF6FF] rounded-lg shadow-md p-4 mt-3 relative" style={{ height: '120px' }}>
-            <h4 className="text-lg font-bold text-gray-800 mb-4">Faculty Feedback</h4>
+            <h4 className="text-lg font-bold text-gray-800 mb-2">Faculty Feedback</h4>
             <div className="mb-8">
               <p className="text-sm text-gray-600 line-clamp-2">
                 {reportCardData?.facultyRemark || "N/A"}
               </p>
             </div>
             <div className="absolute bottom-8 right-6 flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Rating:</span>
+              <span className="text-sm font-medium text-gray-700"></span>
               <div className="flex items-center gap-1">
                 {(() => {
                   const grade = reportCardData?.overallGrade;
