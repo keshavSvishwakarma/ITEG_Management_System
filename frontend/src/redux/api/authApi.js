@@ -414,14 +414,13 @@ export const authApi = createApi({
 
     // Get student level interviews for history page
     getStudentLevelInterviews: builder.query({
-      query: (studentId) => {
-        const endpoint = `${import.meta.env.VITE_GET_LEVEL_INTERVIEW_BY_ID}${studentId}`;
-
-        return {
-          url: endpoint,
-          method: "GET",
-        };
-      },
+      query: (studentId) => ({
+        url: `/admitted/students/get_levels/${studentId}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, studentId) => [
+        { type: 'Student', id: studentId }
+      ],
     }),
 
 
@@ -688,6 +687,44 @@ export const authApi = createApi({
       invalidatesTags: ['User'],
     }),
 
+    // Get report card by student ID
+    getReportCard: builder.query({
+      query: (studentId) => ({
+        url: `/reportcards/${studentId}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, studentId) => [
+        { type: 'Student', id: studentId }
+      ],
+    }),
+
+    // Create report card
+    createReportCard: builder.mutation({
+      query: (reportData) => {
+        console.log('RTK Query - Creating report card with data:', reportData);
+        return {
+          url: '/reportcards',
+          method: "POST",
+          body: reportData,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        };
+      },
+      invalidatesTags: ['Student'],
+    }),
+
+    // Get report card for editing
+    getReportCardForEdit: builder.query({
+      query: (studentId) => ({
+        url: `/reportcards/${studentId}/edit`,
+        method: "GET",
+      }),
+      providesTags: (result, error, studentId) => [
+        { type: 'Student', id: studentId }
+      ],
+    }),
+
   }),
 });
 
@@ -738,5 +775,8 @@ export const {
   useGetStudentAttendanceCalendarQuery,
   useGetAllUsersQuery,
   useDeleteUserMutation,
-  useEditUserMutation
+  useEditUserMutation,
+  useGetReportCardQuery,
+  useCreateReportCardMutation,
+  useGetReportCardForEditQuery
 } = authApi;
