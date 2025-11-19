@@ -562,7 +562,7 @@ exports.createUser = async (req, res) => {
 // Helper functions
 const generateRefreshToken = (user) => {
   return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: "4h",
+    expiresIn: "7d",
   });
 };
 
@@ -593,7 +593,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "1h" }
     );
 
     const refreshToken = generateRefreshToken(user);
@@ -639,7 +639,7 @@ exports.refreshAccessToken = async (req, res) => {
       const newAccessToken = jwt.sign(
         { id: decoded.id, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: "2h" }
+        { expiresIn: "1h" }
       );
 
       res.status(200).json({
@@ -678,7 +678,7 @@ exports.logout = async (req, res) => {
 // 👤 GET USER BY ID
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select("-password -refreshToken -resetPasswordToken");
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const formattedUser = {
@@ -727,6 +727,30 @@ exports.updateUserFields = async (req, res) => {
       success: true,
       message: "User updated successfully",
       user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error });
+  }
+};
+
+// 🗑️ DELETE USER (SUPERADMIN ONLY)
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error", error });
@@ -817,12 +841,10 @@ exports.googleAuthCallback = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: "2h",
+      expiresIn: "1h",
     });
 
-    const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "4h",
-    });
+    const refreshToken = generateRefreshToken(user);
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -852,6 +874,31 @@ exports.getCurrentUser = async (req, res) => {
     delete formattedUser.__v;
 
     res.status(200).json({ success: true, user: formattedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// 👥 GET ALL USERS (SUPERADMIN ONLY)
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select("-password -refreshToken -resetPasswordToken");
+    
+    const formattedUsers = users.map(user => ({
+      ...user._doc,
+      id: user._id,
+    }));
+    
+    formattedUsers.forEach(user => {
+      delete user._id;
+      delete user.__v;
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      users: formattedUsers,
+      count: formattedUsers.length 
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
