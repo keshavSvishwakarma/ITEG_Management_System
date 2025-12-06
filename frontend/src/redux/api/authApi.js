@@ -177,6 +177,9 @@ export const authApi = createApi({
         method: 'PATCH',
         body: data,
       }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'User', id }
+      ],
     }),
     //-- Logout API ----
     logout: builder.mutation({
@@ -584,6 +587,16 @@ export const authApi = createApi({
       invalidatesTags: ['PlacementStudent'],
     }),
 
+    // Update placement post
+    updatePlacementPost: builder.mutation({
+      query: ({ studentId, ...data }) => ({
+        url: `/admitted/students/placement_post/update/${studentId}`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ['PlacementStudent'],
+    }),
+
     // Get all companies
     getAllCompanies: builder.query({
       query: () => ({
@@ -692,6 +705,17 @@ export const authApi = createApi({
       invalidatesTags: ['User'],
     }),
 
+    // Get user by ID
+    getUserById: builder.query({
+      query: (userId) => ({
+        url: `/user/get/${userId}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, userId) => [
+        { type: 'User', id: userId }
+      ],
+    }),
+
     // Get report card by student ID
     getReportCard: builder.query({
       query: (studentId) => ({
@@ -728,6 +752,16 @@ export const authApi = createApi({
       providesTags: (result, error, studentId) => [
         { type: 'Student', id: studentId }
       ],
+    }),
+
+    // Update report card
+    updateReportCard: builder.mutation({
+      query: ({ id, ...reportData }) => ({
+        url: `/reportcards/report-card/${id}`,
+        method: "PUT",
+        body: reportData,
+      }),
+      invalidatesTags: ['Student'],
     }),
 
   }),
@@ -770,7 +804,8 @@ export const {
   useRescheduleInterviewMutation,
   useAddInterviewRoundMutation,
   useConfirmPlacementMutation,
-  useCreatePlacementPostMutation,
+ useCreatePlacementPostMutation ,
+  useUpdatePlacementPostMutation,
   useGetAllCompaniesQuery,
   useGetPlacedStudentsByCompanyQuery,
   useGetItegAttendanceQuery,
@@ -781,7 +816,9 @@ export const {
   useGetAllUsersQuery,
   useDeleteUserMutation,
   useEditUserMutation,
+  useGetUserByIdQuery,
   useGetReportCardQuery,
   useCreateReportCardMutation,
-  useGetReportCardForEditQuery
+  useGetReportCardForEditQuery,
+  useUpdateReportCardMutation
 } = authApi;
